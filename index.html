@@ -2,121 +2,88 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chat Privado JF</title>
     <style>
-        :root { --primary: #0084ff; --bg: #f0f2f5; --me-bg: #d9fdd3; --her-bg: #ffffff; --read: #53bdeb; --check: #8696a0; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        :root { --primary: #0084ff; --bg: #f0f2f5; --me-bg: #d9fdd3; --her-bg: #ffffff; }
         
-        /* Pantallas de Interfaz */
-        #login-screen, #profile-modal { position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; }
-        #profile-modal { display: none; z-index: 4000; padding: 20px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        .card { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 85%; max-width: 320px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        html, body { height: 100dvh; margin: 0; padding: 0; overflow: hidden; background: var(--bg); position: fixed; width: 100%; }
+        body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; }
+        
+        #login-screen, #profile-modal { position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 5000; flex-direction: column; }
+        #profile-modal { display: none; padding: 20px; }
+        
+        #chat-header { background: #fff; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid #ddd; height: 60px; flex-shrink: 0; }
+        .pfp-header { width: 40px; height: 40px; border-radius: 50%; background: #eee; object-fit: cover; margin-right: 10px; }
 
-        /* Header */
-        #chat-header { background: #fff; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid #ddd; gap: 12px; z-index: 100; justify-content: flex-start; height: 60px; box-sizing: border-box; }
-        .pfp-header { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #e0e0e0; flex-shrink: 0; }
-        .user-info { display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; }
-        .user-info b { font-size: 15px; color: #333; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-info span { font-size: 12px; color: #777; line-height: 1.2; }
-        #settings-btn { font-size: 20px; cursor: pointer; padding: 8px; color: #888; }
-
-        /* Chat Box */
-        #chat-container { flex: 1; display: none; flex-direction: column; overflow: hidden; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-color: #e5ddd5; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background-color: #e5ddd5; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
         
-        .msg { padding: 8px 12px; border-radius: 8px; max-width: 80%; font-size: 15px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); }
+        .msg { padding: 10px 14px; border-radius: 12px; max-width: 80%; font-size: 16px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; }
         .me { align-self: flex-end; background: var(--me-bg); border-bottom-right-radius: 2px; }
         .her { align-self: flex-start; background: var(--her-bg); border-bottom-left-radius: 2px; }
         
-        .msg-info { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10px; color: #777; margin-top: 4px; }
-        .check { font-size: 15px; color: var(--check); line-height: 1; }
-        .check.read { color: var(--read); }
+        .msg-info { font-size: 10px; color: #888; text-align: right; margin-top: 4px; }
 
-        /* Multimedia Efímera */
-        .eph-preview { width: 180px; height: 160px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; position: relative; overflow: hidden; }
-        .preview-label { position: relative; z-index: 1; text-align: center; font-size: 13px; font-weight: bold; }
+        #input-area { background: #f0f2f5; padding: 10px 10px 30px 10px; display: flex; gap: 8px; align-items: center; border-top: 1px solid #ddd; flex-shrink: 0; }
+        #message-input { flex: 1; border: none; padding: 12px 16px; border-radius: 24px; font-size: 16px; outline: none; background: white; }
+        .icon-btn { background: none; border: none; font-size: 26px; cursor: pointer; padding: 0 5px; }
 
-        #full-view { position: fixed; inset: 0; background: black; z-index: 5000; display: none; align-items: center; justify-content: center; }
-
-        /* Input Area */
-        #input-area { padding: 10px; background: #f0f2f5; display: flex; gap: 8px; align-items: center; border-top: 1px solid #ddd; }
-        #message-input { flex: 1; border: none; padding: 10px 15px; border-radius: 25px; outline: none; font-size: 16px; background: white; }
-        .icon-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 5px; display: flex; align-items: center; }
-
-        #timer-selector { display: none; position: absolute; bottom: 70px; left: 10px; background: white; padding: 5px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 500; width: 220px; }
-        .timer-opt { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
-        .timer-opt:last-child { border: none; }
-        .active-eph { color: #ff9800; font-weight: bold; }
-        
-        #picker-container { position: absolute; bottom: 70px; left: 10px; display: none; z-index: 1000; }
-        .recording { color: red !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 50% { opacity: 0.3; } }
+        #menu-multimedia { display: none; position: absolute; bottom: 85px; left: 10px; background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 1000; padding: 10px; width: 200px; }
+        .menu-opt { padding: 12px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <div class="card">
-            <h2 style="margin-top:0">Chat Privado JF</h2>
-            <input type="email" id="email" placeholder="Correo">
+        <div style="text-align:center; width: 80%;">
+            <h2>Chat Privado JF</h2>
+            <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Contraseña">
-            <button class="btn" id="login-btn">Entrar</button>
+            <button class="btn" id="login-btn" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;">Entrar</button>
         </div>
     </div>
 
     <div id="profile-modal">
-        <h3>Mi Perfil</h3>
-        <img id="pfp-edit-preview" class="pfp-header" style="width:120px; height:120px; margin-bottom:15px;" src="">
-        <input type="file" id="pfp-file" accept="image/*" style="display:none">
-        <button class="btn" style="background:#888" onclick="document.getElementById('pfp-file').click()">Cambiar Foto</button>
-        <input type="text" id="status-input" placeholder="Estado">
-        <button class="btn" id="save-profile">Guardar</button>
-        <button class="btn" style="background:transparent; color:#555" onclick="document.getElementById('profile-modal').style.display='none'">Cancelar</button>
+        <h3>Ajustes</h3>
+        <button onclick="vaciarTodo()" style="background:#ff3b30; color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; width:100%;">⚠️ VACIAR CHAT COMPLETO</button>
+        <button onclick="document.getElementById('profile-modal').style.display='none'" style="margin-top:15px; background:#888; color:white; border:none; padding:12px; border-radius:8px; width:100%;">Cerrar</button>
     </div>
 
-    <div id="full-view" onclick="closeAndDestroy()"></div>
-
-    <div id="chat-container">
-        <div id="chat-header">
-            <img id="her-pfp" class="pfp-header" src="">
-            <div class="user-info">
-                <b id="her-name">Cargando...</b>
-                <span id="her-status">...</span>
-            </div>
-            <div id="settings-btn" onclick="openProfile()">⚙️</div>
-        </div>
-
-        <div id="chat-box"></div>
-        <div id="picker-container"></div>
-
-        <div id="timer-selector">
-            <div class="timer-opt" onclick="setMode('photo')">🖼️ Foto (Ver una vez)</div>
-            <div class="timer-opt" onclick="setMode('video')">📹 Video (Ver una vez)</div>
-            <div class="timer-opt" onclick="setMode('audio')" id="audio-eph-opt">🎙️ Audio (Oír y borrar): OFF</div>
-        </div>
-
-        <div id="input-area">
-            <input type="file" id="photo-file" accept="image/*" style="display:none">
-            <input type="file" id="video-file" accept="video/*" capture="environment" style="display:none">
-            
-            <button class="icon-btn" onclick="toggleTimer()">➕</button>
-            <button class="icon-btn" id="emoji-btn">😊</button>
-            <input type="text" id="message-input" placeholder="Escribe un mensaje..." autocomplete="off">
-            <button class="icon-btn" id="mic-btn">🎙️</button>
-            <button id="send-btn" class="icon-btn" style="color:var(--primary)">➤</button>
-        </div>
+    <div id="chat-header">
+        <img id="her-pfp" class="pfp-header" src="">
+        <div style="flex:1"><b>Pareja</b></div>
+        <div onclick="document.getElementById('profile-modal').style.display='flex'" style="font-size:24px">⚙️</div>
     </div>
 
-    <script src="https://unpkg.com/picmo@latest/dist/umd/index.js"></script>
+    <div id="chat-box"></div>
+
+    <div id="menu-multimedia">
+        <label class="menu-opt">
+            📷 Cámara (Foto)
+            <input type="file" accept="image/*" capture="camera" id="cam-foto" style="display:none">
+        </label>
+        <label class="menu-opt">
+            🎥 Cámara (Video)
+            <input type="file" accept="video/*" capture="user" id="cam-video" style="display:none">
+        </label>
+        <label class="menu-opt">
+            🖼️ Galería
+            <input type="file" accept="image/*,video/*" id="galeria" style="display:none">
+        </label>
+    </div>
+
+    <div id="input-area">
+        <button class="icon-btn" onclick="toggleMenu()">➕</button>
+        <input type="text" id="message-input" placeholder="Escribe aquí...">
+        <button id="send-btn" class="icon-btn" style="color:var(--primary)">➤</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, push, onChildAdded, onChildChanged, onChildRemoved, serverTimestamp, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, onChildRemoved, serverTimestamp, remove, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8VllGmeJ2FEKISxaUD1zqpvhYlmRH54k",
@@ -131,179 +98,79 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-        
-        let userEmail, userId, pendingEph = false, currentEphId = null;
+        let userEmail;
 
-        // Login
         document.getElementById('login-btn').onclick = () => {
-            const e = document.getElementById('email').value;
-            const p = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, e, p);
+            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
         };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                userEmail = user.email; userId = user.uid;
+                userEmail = user.email;
                 document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('chat-container').style.display = 'flex';
-                initEmojis();
-                syncProfiles();
             }
         });
 
-        // Perfiles y Emojis
-        function syncProfiles() {
-            onValue(ref(db, 'perfiles'), (snap) => {
-                const data = snap.val() || {};
-                Object.keys(data).forEach(id => {
-                    const p = data[id];
-                    if (id === userId) {
-                        document.getElementById('pfp-edit-preview').src = p.photo || '';
-                        document.getElementById('status-input').value = p.status || '';
-                    } else {
-                        document.getElementById('her-pfp').src = p.photo || 'https://via.placeholder.com/40';
-                        document.getElementById('her-name').innerText = p.name || 'Pareja';
-                        document.getElementById('her-status').innerText = p.status || 'Disponible';
-                    }
-                });
-            });
-        }
-
-        function initEmojis() {
-            const p = picmo.createPicker({ rootElement: document.querySelector('#picker-container') });
-            p.addEventListener('emoji:select', e => { document.getElementById('message-input').value += e.emoji; });
-            document.getElementById('emoji-btn').onclick = (ev) => {
-                ev.stopPropagation();
-                const pc = document.querySelector('#picker-container');
-                pc.style.display = pc.style.display === 'block' ? 'none' : 'block';
-                document.getElementById('timer-selector').style.display = 'none';
-            };
-        }
-
-        // Multimedia
-        window.openProfile = () => document.getElementById('profile-modal').style.display = 'flex';
-        document.getElementById('save-profile').onclick = () => {
-            update(ref(db, `perfiles/${userId}`), { 
-                status: document.getElementById('status-input').value,
-                name: userEmail.split('@')[0] 
-            });
-            document.getElementById('profile-modal').style.display = 'none';
-        };
-
-        document.getElementById('pfp-file').onchange = (e) => {
-            const r = new FileReader();
-            r.onload = () => update(ref(db, `perfiles/${userId}`), { photo: r.result });
-            r.readAsDataURL(e.target.files[0]);
-        };
-
-        window.toggleTimer = () => {
-            const s = document.getElementById('timer-selector');
-            s.style.display = s.style.display === 'block' ? 'none' : 'block';
-            document.getElementById('picker-container').style.display = 'none';
-        };
-
-        window.setMode = (type) => {
-            if (type === 'audio') {
-                pendingEph = !pendingEph;
-                document.getElementById('audio-eph-opt').innerText = pendingEph ? "🎙️ Audio (Oír y borrar): ON" : "🎙️ Audio (Oír y borrar): OFF";
-                document.getElementById('audio-eph-opt').classList.toggle('active-eph', pendingEph);
-                return;
-            }
-            const inputId = type === 'photo' ? 'photo-file' : 'video-file';
-            const f = document.getElementById(inputId);
-            f.onchange = (e) => {
-                if (!e.target.files[0]) return;
-                const r = new FileReader();
-                r.onload = () => push(ref(db, 'mensajes'), { 
-                    sender: userEmail, text: r.result, type: type, eph: true, timestamp: serverTimestamp(), status: 'sent' 
-                });
-                r.readAsDataURL(e.target.files[0]);
-                document.getElementById('timer-selector').style.display = 'none';
-            };
-            f.click();
-        };
-
-        // Mensajería
-        const sendMsg = (txt, type = 'text', eph = false) => {
-            push(ref(db, 'mensajes'), { sender: userEmail, text: txt, type: type, eph: eph, timestamp: serverTimestamp(), status: 'sent' });
-        };
-
-        document.getElementById('send-btn').onclick = () => {
-            const i = document.getElementById('message-input');
-            if (i.value.trim()) { sendMsg(i.value); i.value = ''; }
-        };
-
-        // Visor
-        window.openMedia = (id, url, type) => {
-            currentEphId = id;
-            const view = document.getElementById('full-view');
-            view.innerHTML = type === 'photo' 
-                ? `<img src="${url}" style="max-width:100%; max-height:100%">` 
-                : `<video src="${url}" autoplay controls style="max-width:100%; max-height:100%" onended="closeAndDestroy()"></video>`;
-            view.style.display = 'flex';
-        };
-
-        window.closeAndDestroy = () => {
-            if (currentEphId) remove(ref(db, `mensajes/${currentEphId}`));
-            document.getElementById('full-view').style.display = 'none';
-            currentEphId = null;
-        };
-
-        // Escucha de mensajes
+        // ESCUCHAR MENSAJES
         onChildAdded(ref(db, 'mensajes'), (snap) => {
-            const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
-            if (!isMe && m.status !== 'read') update(ref(db, `mensajes/${id}`), { status: 'read' });
-
+            const m = snap.val(); const id = snap.key;
+            const isMe = m.sender === userEmail;
             const div = document.createElement('div');
-            div.id = `msg-${id}`; div.className = `msg ${isMe ? 'me' : 'her'}`;
+            div.id = `msg-${id}`;
+            div.className = `msg ${isMe ? 'me' : 'her'}`;
             
-            let html = "";
-            if (m.type === 'photo' || m.type === 'video') {
-                html = `<div class="eph-preview" onclick="openMedia('${id}','${m.text}','${m.type}')">
-                            <div class="preview-label">${m.type === 'photo' ? '📷 Foto' : '🎥 Video'} Privado<br><small>(Toca para ver)</small></div>
-                        </div>`;
-            } else if (m.type === 'audio') {
-                const audioId = `aud-${id}`;
-                html = `<audio id="${audioId}" controls src="${m.text}" style="width:200px" onended="if(${m.eph}){ document.getElementById('msg-${id}').remove(); remove(ref(getDatabase(),'mensajes/${id}')); }"></audio>`;
-                if(m.eph && !isMe) html = `<div class="eph-preview" style="height:60px" onclick="this.innerHTML='Reproduciendo...'; document.getElementById('${audioId}').play();">🎙️ Audio Efímero (1 vez)</div><audio id="${audioId}" src="${m.text}" onended="remove(ref(getDatabase(),'mensajes/${id}'))"></audio>`;
-            } else { html = `<span>${m.text}</span>`; }
+            // BORRADO POR DOBLE TOQUE (Para ti y para ella)
+            if (isMe) {
+                div.ondblclick = () => { if(confirm("¿Borrar mensaje para todos?")) remove(ref(db, `mensajes/${id}`)); };
+                // Para móviles que no detectan dblclick bien:
+                let lastTap = 0;
+                div.addEventListener('touchend', () => {
+                    const now = new Date().getTime();
+                    if (now - lastTap < 300) { if(confirm("¿Borrar mensaje para todos?")) remove(ref(db, `mensajes/${id}`)); }
+                    lastTap = now;
+                });
+            }
 
-            const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-            div.innerHTML = `${html}<div class="msg-info">${time}${isMe ? `<span class="check ${m.status==='read'?'read':''}">✓✓</span>`:''}</div>`;
+            let content = `<span>${m.text}</span>`;
+            if (m.type === 'image') content = `<img src="${m.text}" style="width:100%; border-radius:8px;">`;
+            
+            div.innerHTML = `${content}<div class="msg-info">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
             document.getElementById('chat-box').appendChild(div);
             document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
         });
 
-        onChildChanged(ref(db, 'mensajes'), (snap) => {
-            const el = document.querySelector(`#msg-${snap.key} .check`);
-            if (el && snap.val().status === 'read') el.classList.add('read');
-        });
+        onChildRemoved(ref(db, 'mensajes'), snap => document.getElementById(`msg-${snap.key}`)?.remove());
 
-        onChildRemoved(ref(db, 'mensajes'), (snap) => { document.getElementById(`msg-${snap.key}`)?.remove(); });
-
-        // Grabación de Audio
-        let recorder; let chunks = [];
-        document.getElementById('mic-btn').onclick = async () => {
-            if (!recorder || recorder.state === "inactive") {
-                const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-                recorder = new MediaRecorder(s); chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => {
-                    const r = new FileReader();
-                    r.onload = () => { 
-                        sendMsg(r.result, 'audio', pendingEph); 
-                        if(pendingEph) { pendingEph = false; document.getElementById('audio-eph-opt').innerText = "🎙️ Audio (Oír y borrar): OFF"; document.getElementById('audio-eph-opt').classList.remove('active-eph'); }
-                    };
-                    r.readAsDataURL(new Blob(chunks, { type: 'audio/webm' }));
-                    document.getElementById('mic-btn').classList.remove('recording');
-                };
-                recorder.start(); document.getElementById('mic-btn').classList.add('recording');
-            } else { recorder.stop(); }
+        // ENVIAR TEXTO
+        document.getElementById('send-btn').onclick = () => {
+            const i = document.getElementById('message-input');
+            if (i.value.trim()) {
+                push(ref(db, 'mensajes'), { sender: userEmail, text: i.value, type: 'text', timestamp: serverTimestamp() });
+                i.value = '';
+            }
         };
 
-        document.getElementById('chat-box').onclick = () => {
-            document.getElementById('timer-selector').style.display = 'none';
-            document.getElementById('picker-container').style.display = 'none';
+        // SUBIR MULTIMEDIA (Cámara o Galería)
+        const handleFile = (e) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                push(ref(db, 'mensajes'), { sender: userEmail, text: reader.result, type: 'image', timestamp: serverTimestamp() });
+                document.getElementById('menu-multimedia').style.display = 'none';
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        document.getElementById('cam-foto').onchange = handleFile;
+        document.getElementById('cam-video').onchange = handleFile;
+        document.getElementById('galeria').onchange = handleFile;
+
+        window.toggleMenu = () => {
+            const m = document.getElementById('menu-multimedia');
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        };
+
+        window.vaciarTodo = () => {
+            if(confirm("¿BORRAR TODO EL CHAT DEFINITIVAMENTE?")) set(ref(db, 'mensajes'), {});
         };
     </script>
 </body>
