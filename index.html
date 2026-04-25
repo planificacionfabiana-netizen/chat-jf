@@ -36,22 +36,35 @@
         .media-wrapper { width: 140px; height: 140px; background: #333; border-radius: 12px; overflow: hidden; margin-top: 5px; border: 2px solid rgba(255,255,255,0.2); }
         .media-content { width: 100%; height: 100%; object-fit: cover; filter: blur(50px); transform: scale(1.6); }
         
-        #input-area { 
-    padding: 8px 12px;
-    /* Subimos el banner para que no lo tape la barra del sistema o el teclado */
-    margin-bottom: 25px; 
-    /* Agregamos espacio a los lados para que no toque los bordes del celular */
-    margin-left: 10px;
-    margin-right: 10px;
-    background: #fff; 
+       #input-area { 
     display: flex; 
-    gap: 8px; 
     align-items: center; 
-    /* Bordes redondeados y sombra para efecto "flotante" profesional */
+    gap: 8px; 
+    padding: 8px 12px;
+    background: #fff; 
+    
+    /* Esto es lo que lo sube y le da aire a los lados */
+    margin: 0 10px 25px 10px; 
+    
+    /* Asegura que el ancho sea correcto sumando los márgenes */
+    width: calc(100% - 20px); 
+    box-sizing: border-box; 
+    
     border-radius: 30px;
     border: 1px solid #eee;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     flex-shrink: 0; 
+}
+
+#message-input { 
+    flex: 1; 
+    min-width: 0; /* Vital para que no empuje los iconos hacia afuera */
+    border: none; 
+    padding: 10px 15px; 
+    border-radius: 20px; 
+    background: #f0f2f5; 
+    font-size: 16px; 
+    outline: none; 
 }
 
 /* Ajuste adicional para que el input de texto no empuje los iconos fuera de la pantalla */
