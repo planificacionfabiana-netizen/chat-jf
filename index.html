@@ -35,16 +35,15 @@
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
         }
 
-        .msg { padding: 8px 12px; border-radius: 12px; max-width: 85%; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
+        .msg { padding: 8px 12px; border-radius: 12px; max-width: 85%; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; user-select: none; }
         .me { align-self: flex-end; background: var(--me-bg); border-top-right-radius: 2px; }
         .her { align-self: flex-start; background: var(--her-bg); border-top-left-radius: 2px; }
         
         .status-container { font-size: 10px; text-align: right; color: gray; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 3px; }
         .check-read { color: #34b7f1; font-weight: bold; }
 
-        /* Multimedia Efímera */
         .media-wrapper { width: 150px; height: 150px; background: #333; border-radius: 12px; overflow: hidden; margin-top: 5px; }
-        .media-content { width: 100%; height: 100%; object-fit: cover; filter: blur(45px); transition: 0.3s; }
+        .media-content { width: 100%; height: 100%; object-fit: cover; filter: blur(45px); }
 
         /* Barra de Entrada */
         #input-area { 
@@ -168,10 +167,9 @@
             }
         });
 
-        // --- DINÁMICA DE ENTRADA ---
+        // --- DINÁMICA ---
         window.handleTyping = (el) => {
-            el.style.height = 'auto';
-            el.style.height = el.scrollHeight + 'px';
+            el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px';
             document.getElementById('main-icon').innerText = el.value.trim().length > 0 ? "➤" : "🎙️";
         };
 
@@ -181,9 +179,7 @@
                 sendMsg(input.value.trim(), 'text', false);
                 input.value = ''; handleTyping(input);
                 closePopups();
-            } else {
-                handleVoice();
-            }
+            } else { handleVoice(); }
         };
 
         // --- VOZ ---
@@ -195,9 +191,7 @@
                 recorder.ondataavailable = e => chunks.push(e.data);
                 recorder.onstop = () => {
                     const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-                    const r = new FileReader();
-                    r.onload = () => sendMsg(r.result, 'audio', true);
-                    r.readAsDataURL(blob);
+                    const r = new FileReader(); r.onload = () => sendMsg(r.result, 'audio', true); r.readAsDataURL(blob);
                     stream.getTracks().forEach(t => t.stop());
                     document.getElementById('right-btn').classList.remove('recording');
                     document.getElementById('main-icon').innerText = "🎙️";
@@ -212,7 +206,7 @@
             push(ref(db, 'mensajes'), { sender: userEmail, text: txt, type, eph, read: false, timestamp: serverTimestamp() });
         };
 
-        // --- RENDER MENSAJES ---
+        // --- RENDER & BORRADO MEJORADO ---
         onChildAdded(ref(db, 'mensajes'), snap => {
             const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
             if (!isMe && !m.read) update(ref(db, `mensajes/${id}`), { read: true });
@@ -230,8 +224,21 @@
             div.innerHTML = `${html}<div class="status-container">${time} ${checks}</div>`;
             
             if (isMe) {
-                div.ondblclick = () => confirm("¿Borrar?") && deleteMsg(id);
-                if(m.type === 'text') div.onclick = () => { const n = prompt("Editar:", m.text); n && update(ref(db, `mensajes/${id}`), {text: n}); };
+                let lastTap = 0;
+                div.addEventListener('click', (e) => {
+                    const now = Date.now();
+                    const timesince = now - lastTap;
+                    if (timesince < 300 && timesince > 0) {
+                        // Doble toque: Borrar
+                        if(confirm("¿Borrar mensaje?")) deleteMsg(id);
+                    } else {
+                        // Un toque: Editar (solo texto)
+                        if(m.type === 'text') {
+                            setTimeout(() => { if (Date.now() - now >= 300) { const n = prompt("Editar:", m.text); n && update(ref(db, `mensajes/${id}`), {text: n}); } }, 305);
+                        }
+                    }
+                    lastTap = now;
+                });
             }
 
             document.getElementById('chat-box').appendChild(div);
@@ -239,19 +246,12 @@
         });
 
         // --- PERFIL ---
-        window.toggleProfile = (show) => {
-            document.getElementById('profile-modal').classList.toggle('open', show);
-            document.getElementById('overlay').style.display = show ? 'block' : 'none';
-        };
-        window.previewPfp = (input) => {
-            const r = new FileReader(); r.onload = e => document.getElementById('current-pfp-edit').src = e.target.result;
-            r.readAsDataURL(input.files[0]);
-        };
+        window.toggleProfile = (show) => { document.getElementById('profile-modal').classList.toggle('open', show); document.getElementById('overlay').style.display = show ? 'block' : 'none'; };
+        window.previewPfp = (input) => { const r = new FileReader(); r.onload = e => document.getElementById('current-pfp-edit').src = e.target.result; r.readAsDataURL(input.files[0]); };
         window.saveProfile = () => {
             const uid = userEmail.replace(/\./g, '_');
             const data = { name: document.getElementById('new-name').value, status: document.getElementById('new-status').value, pfp: document.getElementById('current-pfp-edit').src };
-            update(ref(db, `users/${uid}`), data);
-            toggleProfile(false);
+            update(ref(db, `users/${uid}`), data); toggleProfile(false);
         };
         function syncProfile() {
             const uid = userEmail.replace(/\./g, '_');
@@ -277,8 +277,7 @@
         window.triggerInput = (acc, cam) => { const i = document.getElementById('universal-input'); i.accept = acc; cam ? i.setAttribute("capture", "environment") : i.removeAttribute("capture"); i.click(); closePopups(); };
         document.getElementById('universal-input').onchange = (e) => {
             const f = e.target.files[0]; if(!f) return;
-            const r = new FileReader(); r.onload = ev => sendMsg(ev.target.result, f.type.includes('video') ? 'video' : 'photo', true);
-            r.readAsDataURL(f);
+            const r = new FileReader(); r.onload = ev => sendMsg(ev.target.result, f.type.includes('video') ? 'video' : 'photo', true); r.readAsDataURL(f);
         };
         window.openEph = (id, url, type) => { currentEphId = id; const fv = document.getElementById('full-view'); fv.innerHTML = type==='photo' ? `<img src="${url}" style="max-width:95%; max-height:90%;">` : `<video src="${url}" controls autoplay style="max-width:95%; max-height:90%;"></video>`; fv.style.display = 'flex'; };
         window.closeEphMedia = () => { if(currentEphId) deleteMsg(currentEphId); currentEphId = null; document.getElementById('full-view').style.display = 'none'; };
