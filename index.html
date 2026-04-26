@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chat Privado JF</title>
+    <script src="https://unpkg.com/picmo@latest/dist/umd/index.js"></script>
     <style>
         :root { --primary: #0084ff; --bg: #f0f2f5; --me-bg: #d9fdd3; --her-bg: #ffffff; --whatsapp-green: #075e54; }
         
@@ -14,13 +15,10 @@
             background: #e5ddd5; 
         }
 
-        /* Login */
         #login-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .login-card { background: white; padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 85%; max-width: 350px; text-align: center; }
         .login-card input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; outline: none; }
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: 600; cursor: pointer; }
-
-        /* Contenedor Principal */
+        
         #chat-container { display: none; flex-direction: column; height: 100vh; height: -webkit-fill-available; width: 100%; overflow: hidden; }
 
         #chat-header { background: #fff; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; height: 65px; flex-shrink: 0; z-index: 10; }
@@ -33,22 +31,24 @@
             background-attachment: fixed;
         }
 
-        /* Burbujas de Mensaje */
         .msg { padding: 8px 12px; border-radius: 12px; max-width: 85%; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; position: relative; }
         .me { align-self: flex-end; background: var(--me-bg); border-top-right-radius: 2px; }
         .her { align-self: flex-start; background: var(--her-bg); border-top-left-radius: 2px; }
         
-        .media-wrapper { width: 160px; height: 160px; background: #333; border-radius: 12px; overflow: hidden; margin-top: 5px; }
-        .media-content { width: 100%; height: 100%; object-fit: cover; filter: blur(40px); }
-
         .status-container { font-size: 10px; text-align: right; color: gray; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 3px; }
         .check-read { color: #34b7f1; font-weight: bold; }
 
-        /* Barra de Entrada Adaptada */
+        /* Selector de Emojis */
+        #picker-container {
+            display: none; position: absolute; bottom: 85px; left: 50%; 
+            transform: translateX(-50%); z-index: 1001;
+            width: 90%; max-width: 350px; height: 300px;
+        }
+
         #input-area { 
             display: flex; align-items: flex-end; gap: 8px; 
             padding: 10px 10px 25px 10px; background: transparent; 
-            width: 100%; box-sizing: border-box; flex-shrink: 0;
+            width: 100%; box-sizing: border-box; flex-shrink: 0; position: relative;
         }
 
         .input-wrapper {
@@ -66,27 +66,18 @@
 
         .icon-btn { background: none; border: none; font-size: 24px; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px; }
         
-        /* Botón de la derecha (Circular estilo WhatsApp) */
         #right-btn {
             width: 48px; height: 48px; background: var(--whatsapp-green); 
             border-radius: 50%; color: white; display: flex; 
-            align-items: center; justify-content: center; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2); border: none;
-            cursor: pointer; flex-shrink: 0;
+            align-items: center; justify-content: center; border: none; flex-shrink: 0;
         }
 
-        .recording { background: #ff3b30 !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 50% { opacity: 0.7; } }
-
-        /* Menú Adjuntos */
         #menu-adjuntos {
             display: none; position: absolute; bottom: 85px; left: 15px; 
             background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
             z-index: 1000; overflow: hidden; width: 180px;
         }
-        .menu-item { padding: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; }
-        
-        #full-view { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; align-items: center; justify-content: center; }
+        .menu-item { padding: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -96,11 +87,9 @@
             <h2>Chat Privado JF</h2>
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Contraseña">
-            <button class="btn-primary" onclick="login()">Entrar</button>
+            <button onclick="login()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px;">Entrar</button>
         </div>
     </div>
-
-    <div id="full-view" onclick="closeEphMedia()"></div>
 
     <div id="chat-container">
         <div id="chat-header">
@@ -109,10 +98,12 @@
                 <b id="her-name">...</b><br>
                 <span id="her-status" style="font-size:11px; color:#888">...</span>
             </div>
-            <button class="icon-btn" onclick="toggleProfile(true)">⚙️</button>
+            <button class="icon-btn">⚙️</button>
         </div>
 
         <div id="chat-box"></div>
+
+        <div id="picker-container"></div>
 
         <div id="menu-adjuntos">
             <div class="menu-item" onclick="triggerInput('image/*', true)">📸 Cámara</div>
@@ -125,7 +116,7 @@
             <div class="input-wrapper">
                 <button class="icon-btn" onclick="toggleMenu()">➕</button>
                 <textarea id="message-input" rows="1" placeholder="Mensaje" oninput="handleInput(this)"></textarea>
-                <button class="icon-btn">😊</button>
+                <button class="icon-btn" id="emoji-trigger">😊</button>
             </div>
             <button id="right-btn">
                 <span id="main-icon">🎙️</span>
@@ -136,7 +127,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, push, onChildAdded, onChildChanged, onChildRemoved, serverTimestamp, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, serverTimestamp, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8VllGmeJ2FEKISxaUD1zqpvhYlmRH54k",
@@ -151,7 +142,30 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-        let userEmail, currentEphId = null, recorder, chunks = [];
+        let userEmail;
+
+        // Inicializar Emojis (PicMo)
+        const container = document.querySelector('#picker-container');
+        const picker = picmo.createPicker({ rootElement: container });
+
+        picker.addEventListener('emoji:select', event => {
+            const input = document.getElementById('message-input');
+            input.value += event.emoji;
+            handleInput(input);
+        });
+
+        document.getElementById('emoji-trigger').onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = container.style.display === 'block';
+            container.style.display = isVisible ? 'none' : 'block';
+            document.getElementById('menu-adjuntos').style.display = 'none';
+        };
+
+        // Cerrar picker si se toca el chat
+        document.getElementById('chat-box').onclick = () => {
+            container.style.display = 'none';
+            document.getElementById('menu-adjuntos').style.display = 'none';
+        };
 
         window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
 
@@ -164,7 +178,6 @@
             }
         });
 
-        // Lógica del botón derecho dinámico
         window.handleInput = (el) => {
             el.style.height = 'auto';
             el.style.height = el.scrollHeight + 'px';
@@ -173,115 +186,38 @@
 
         document.getElementById('right-btn').onclick = () => {
             const input = document.getElementById('message-input');
-            const text = input.value.trim();
-            if (text) {
-                sendMsg(text, 'text', false);
+            if (input.value.trim()) {
+                push(ref(db, 'mensajes'), { sender: userEmail, text: input.value.trim(), type: 'text', read: false, timestamp: serverTimestamp() });
                 input.value = '';
                 handleInput(input);
-            } else {
-                handleAudio();
+                container.style.display = 'none';
             }
         };
-
-        async function handleAudio() {
-            if (!recorder || recorder.state === "inactive") {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    recorder = new MediaRecorder(stream);
-                    chunks = [];
-                    recorder.ondataavailable = e => chunks.push(e.data);
-                    recorder.onstop = () => {
-                        const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-                        const reader = new FileReader();
-                        reader.onload = () => sendMsg(reader.result, 'audio', true);
-                        reader.readAsDataURL(blob);
-                        stream.getTracks().forEach(t => t.stop());
-                        document.getElementById('right-btn').classList.remove('recording');
-                        document.getElementById('main-icon').innerText = "🎙️";
-                    };
-                    recorder.start();
-                    document.getElementById('right-btn').classList.add('recording');
-                    document.getElementById('main-icon').innerText = "🛑";
-                } catch (e) { alert("Acceso denegado al micro"); }
-            } else {
-                recorder.stop();
-            }
-        }
 
         window.toggleMenu = () => {
             const m = document.getElementById('menu-adjuntos');
             m.style.display = m.style.display === 'block' ? 'none' : 'block';
+            container.style.display = 'none';
         };
 
         window.triggerInput = (accept, useCam) => {
             const input = document.getElementById('universal-input');
             input.accept = accept;
             if(useCam) input.setAttribute("capture", "environment");
-            else input.removeAttribute("capture");
             input.click();
             toggleMenu();
         };
 
-        document.getElementById('universal-input').onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (ev) => sendMsg(ev.target.result, file.type.includes('video') ? 'video' : 'photo', true);
-                reader.readAsDataURL(file);
-            }
-        };
-
-        const sendMsg = (txt, type, eph) => {
-            push(ref(db, 'mensajes'), { sender: userEmail, text: txt, type, eph, read: false, timestamp: serverTimestamp() });
-        };
-
         onChildAdded(ref(db, 'mensajes'), (snap) => {
-            const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
-            if (!isMe && !m.read) update(ref(db, `mensajes/${id}`), { read: true });
-
+            const m = snap.val(); const isMe = m.sender === userEmail;
             const div = document.createElement('div');
-            div.id = `msg-${id}`; div.className = `msg ${isMe ? 'me' : 'her'}`;
-            
-            let content = `<span>${m.text}</span>`;
-            if (m.type === 'photo') content = `<div class="media-wrapper"><img src="${m.text}" class="media-content" onclick="openEph('${id}','${m.text}','photo')"></div>`;
-            if (m.type === 'video') content = `<div class="media-wrapper"><video src="${m.text}" class="media-content" onclick="openEph('${id}','${m.text}','video')"></video></div>`;
-            if (m.type === 'audio') content = `<audio src="${m.text}" controls onended="remove(ref(db,'mensajes/${id}'))"></audio>`;
-
+            div.className = `msg ${isMe ? 'me' : 'her'}`;
             const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-            const check = isMe ? (m.read ? '<span class="check-read">✓✓</span>' : '✓') : '';
-
-            div.innerHTML = `${content}<div class="status-container">${time} ${check}</div>`;
-            
-            // Lógica de edición/borrado
-            if (isMe) {
-                let timer;
-                div.onclick = () => {
-                    if (m.type === 'text') {
-                        timer = setTimeout(() => {
-                            const n = prompt("Editar mensaje:", m.text);
-                            if (n) update(ref(db, `mensajes/${id}`), { text: n });
-                        }, 250);
-                    }
-                };
-                div.ondblclick = () => { clearTimeout(timer); if(confirm("¿Borrar?")) remove(ref(db, `mensajes/${id}`)); };
-            }
-
-            document.getElementById('chat-box').appendChild(div);
-            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+            div.innerHTML = `<span>${m.text}</span><div class="status-container">${time} ${isMe ? (m.read ? '<span class="check-read">✓✓</span>' : '✓') : ''}</div>`;
+            const box = document.getElementById('chat-box');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         });
-
-        // Visor efímero
-        window.openEph = (id, url, type) => {
-            currentEphId = id;
-            const fv = document.getElementById('full-view');
-            fv.innerHTML = type === 'photo' ? `<img src="${url}" style="max-width:95%; max-height:90%;">` : `<video src="${url}" controls autoplay style="max-width:95%; max-height:90%;"></video>`;
-            fv.style.display = 'flex';
-        };
-
-        window.closeEphMedia = () => {
-            if (currentEphId) { remove(ref(db, `mensajes/${currentEphId}`)); currentEphId = null; }
-            document.getElementById('full-view').style.display = 'none';
-        };
 
         function syncProfile() {
             onValue(ref(db, 'users'), (snap) => {
@@ -290,20 +226,11 @@
                 for (let id in data) {
                     if (id !== uid) {
                         document.getElementById('her-name').innerText = data[id].name || "Pareja";
-                        document.getElementById('her-status').innerText = data[id].status || "Disponible";
                         document.getElementById('her-pfp').src = data[id].pfp || "";
                     }
                 }
             });
         }
-
-        onChildChanged(ref(db, 'mensajes'), snap => {
-            const m = snap.val(); const el = document.getElementById(`msg-${snap.key}`);
-            if (el && m.read && m.sender === userEmail) {
-                el.querySelector('.status-container').innerHTML += ' <span class="check-read">✓✓</span>';
-            }
-        });
-        onChildRemoved(ref(db, 'mensajes'), snap => document.getElementById(`msg-${snap.key}`)?.remove());
     </script>
 </body>
 </html>
