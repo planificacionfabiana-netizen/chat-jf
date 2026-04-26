@@ -7,7 +7,6 @@
     <style>
         :root { --primary: #0084ff; --bg: #f0f2f5; --me-bg: #d9fdd3; --her-bg: #ffffff; --accent: #0056b3; }
         
-        /* Reset para que nada se salga de la pantalla en el celular */
         html, body { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; position: fixed; 
@@ -27,7 +26,7 @@
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 3999; display: none; }
         .modal-footer { margin-top: auto; padding-bottom: 40px; display: flex; flex-direction: column; gap: 10px; }
 
-        /* Estructura del Chat adaptable */
+        /* Estructura del Chat */
         #chat-container { 
             display: none; flex-direction: column; 
             height: 100vh; height: -webkit-fill-available; 
@@ -54,9 +53,13 @@
         .media-wrapper { width: 140px; height: 140px; background: #333; border-radius: 12px; overflow: hidden; margin-top: 5px; border: 2px solid rgba(255,255,255,0.2); }
         .media-content { width: 100%; height: 100%; object-fit: cover; filter: blur(50px); transform: scale(1.6); }
 
-        /* BANNER DE ESCRITURA FLOTANTE (Sin cuadro feo) */
+        /* Estilo para los Checks */
+        .status-container { font-size: 10px; text-align: right; color: gray; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 3px; }
+        .check-read { color: #34b7f1; font-weight: bold; }
+
+        /* BANNER DE ESCRITURA MODERNO */
         #input-area { 
-            display: flex; align-items: center; gap: 8px; 
+            display: flex; align-items: flex-end; gap: 8px; 
             padding: 8px 12px; background: transparent; 
             margin: 5px auto 25px auto; width: 95%; max-width: 500px;
             flex-shrink: 0; box-sizing: border-box; z-index: 20;
@@ -64,12 +67,14 @@
 
         #message-input { 
             flex: 1; min-width: 0; border: 1px solid rgba(0,0,0,0.05); 
-            padding: 12px 18px; border-radius: 25px; 
+            padding: 10px 15px; border-radius: 20px; 
             background: #ffffff; font-size: 16px; outline: none; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            resize: none; max-height: 120px; line-height: 1.4;
+            font-family: inherit;
         }
 
-        .icon-btn { background: none; border: none; font-size: 24px; color: #555; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .icon-btn { background: none; border: none; font-size: 24px; color: #555; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
         .recording { color: #ff3b30 !important; animation: pulse 1s infinite; transform: scale(1.2); }
         
         #full-view { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; align-items: center; justify-content: center; }
@@ -133,7 +138,7 @@
             <input type="file" id="universal-input" style="display:none">
             <button class="icon-btn" onclick="toggleMenu()">➕</button>
             <button class="icon-btn" id="emoji-btn">😊</button>
-            <input type="text" id="message-input" placeholder="Escribe un mensaje...">
+            <textarea id="message-input" rows="1" placeholder="Escribe un mensaje..." oninput="autoResize(this)"></textarea>
             <button class="icon-btn" id="mic-btn">🎙️</button>
             <button id="send-btn" class="icon-btn" style="color:var(--primary)">➤</button>
         </div>
@@ -160,6 +165,7 @@
         const db = getDatabase(app);
         let userEmail, currentEphId = null;
 
+        window.autoResize = (el) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; };
         window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
 
         onAuthStateChanged(auth, (user) => {
@@ -208,10 +214,7 @@
             const updates = { name: document.getElementById('new-name').value, status: document.getElementById('new-status').value };
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    updates.pfp = e.target.result;
-                    update(ref(db, `users/${uid}`), updates);
-                };
+                reader.onload = (e) => { updates.pfp = e.target.result; update(ref(db, `users/${uid}`), updates); };
                 reader.readAsDataURL(file);
             } else { update(ref(db, `users/${uid}`), updates); }
             toggleProfile(false);
@@ -219,7 +222,10 @@
 
         function initEmojis() {
             const p = picmo.createPicker({ rootElement: document.querySelector('#picker-container') });
-            p.addEventListener('emoji:select', e => { document.getElementById('message-input').value += e.emoji; });
+            p.addEventListener('emoji:select', e => { 
+                const input = document.getElementById('message-input');
+                input.value += e.emoji; autoResize(input);
+            });
             document.getElementById('emoji-btn').onclick = () => {
                 const pc = document.querySelector('#picker-container');
                 pc.style.display = pc.style.display === 'block' ? 'none' : 'block';
@@ -251,57 +257,53 @@
             }
         };
 
-        // --- SISTEMA DE AUDIO COMPATIBLE CON SAFARI/IPHONE ---
         let recorder; let chunks = [];
         document.getElementById('mic-btn').onclick = async () => {
             try {
                 if (!recorder || recorder.state === "inactive") {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    
-                    // Safari usa audio/mp4 por defecto
                     let mimeType = 'audio/webm';
                     if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/mp4';
-
-                    recorder = new MediaRecorder(stream, { mimeType }); 
-                    chunks = [];
-                    
+                    recorder = new MediaRecorder(stream, { mimeType }); chunks = [];
                     recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-                    
                     recorder.onstop = () => {
                         const blob = new Blob(chunks, { type: recorder.mimeType });
                         const r = new FileReader();
-                        r.onload = () => {
-                            sendMsg(r.result, 'audio', true);
-                            stream.getTracks().forEach(t => t.stop()); // Apaga el micro al terminar
-                        };
+                        r.onload = () => { sendMsg(r.result, 'audio', true); stream.getTracks().forEach(t => t.stop()); };
                         r.readAsDataURL(blob);
                         document.getElementById('mic-btn').classList.remove('recording');
                         document.getElementById('mic-btn').innerHTML = "🎙️";
                     };
-
                     recorder.start(); 
                     document.getElementById('mic-btn').classList.add('recording');
                     document.getElementById('mic-btn').innerHTML = "🛑";
-                } else {
-                    recorder.stop();
-                }
-            } catch (err) {
-                alert("Permite el acceso al micrófono en los ajustes de tu navegador.");
-            }
+                } else { recorder.stop(); }
+            } catch (err) { alert("Permite el acceso al micrófono."); }
         };
 
         const sendMsg = (txt, type = 'text', eph = false) => {
             if (type === 'text' && !txt.trim()) return;
-            push(ref(db, 'mensajes'), { sender: userEmail, text: txt, type: type, eph: eph, timestamp: serverTimestamp() });
+            push(ref(db, 'mensajes'), { 
+                sender: userEmail, 
+                text: txt, 
+                type: type, 
+                eph: eph, 
+                read: false, // Inicia como no leído
+                timestamp: serverTimestamp() 
+            });
         };
 
         document.getElementById('send-btn').onclick = () => {
             const i = document.getElementById('message-input');
-            sendMsg(i.value, 'text', false); i.value = '';
+            sendMsg(i.value, 'text', false); i.value = ''; i.style.height = 'auto';
         };
 
         onChildAdded(ref(db, 'mensajes'), (snap) => {
             const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
+            
+            // Lógica de "Leído": Si el mensaje no es mío y no está leído, lo marco como leído
+            if (!isMe && !m.read) { update(ref(db, `mensajes/${id}`), { read: true }); }
+
             const div = document.createElement('div');
             div.id = `msg-${id}`; div.className = `msg ${isMe ? 'me' : 'her'}`;
             let html = `<span>${m.text}</span>`;
@@ -312,7 +314,13 @@
             } else if (m.type === 'audio') {
                 html = `<audio src="${m.text}" controls onended="deleteMsg('${id}')"></audio>`;
             }
-            div.innerHTML = `${html}<div style="font-size:10px; text-align:right; color:gray; margin-top:4px">${m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ''}</div>`;
+
+            // Hora + Check (solo para mis mensajes)
+            const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+            const checkIcon = isMe ? (m.read ? '<span class="check-read">✓✓</span>' : '✓') : '';
+            
+            div.innerHTML = `${html}<div class="status-container">${time} ${checkIcon}</div>`;
+
             if (isMe) {
                 let timer;
                 div.onclick = (e) => { if (e.detail === 1 && m.type === 'text') { timer = setTimeout(() => { const n = prompt("Editar:", m.text); if (n) update(ref(db, `mensajes/${id}`), { text: n }); }, 250); } };
@@ -331,7 +339,22 @@
 
         window.closeEphMedia = () => { if (currentEphId) { deleteMsg(currentEphId); currentEphId = null; } document.getElementById('full-view').style.display = 'none'; };
         window.deleteMsg = (id) => remove(ref(db, `mensajes/${id}`));
-        onChildChanged(ref(db, 'mensajes'), snap => { const el = document.getElementById(`msg-${snap.key}`); if (el && snap.val().type === 'text') el.querySelector('span').innerText = snap.val().text; });
+        
+        // Listener para actualizar los checks cuando cambien en la DB
+        onChildChanged(ref(db, 'mensajes'), snap => { 
+            const m = snap.val();
+            const el = document.getElementById(`msg-${snap.key}`); 
+            if (!el) return;
+            if (m.type === 'text') el.querySelector('span').innerText = m.text;
+            
+            // Actualizar icono de check si cambió a leído
+            if (m.sender === userEmail && m.read) {
+                const statusDiv = el.querySelector('.status-container');
+                const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+                statusDiv.innerHTML = `${time} <span class="check-read">✓✓</span>`;
+            }
+        });
+
         onChildRemoved(ref(db, 'mensajes'), snap => document.getElementById(`msg-${snap.key}`)?.remove());
     </script>
 </body>
