@@ -7,7 +7,6 @@
     <style>
         :root { 
             --primary: #0084ff; 
-            --bg: #f0f2f5; 
             --me-bg: #d9fdd3; 
             --her-bg: #ffffff; 
             --whatsapp-green: #075e54; 
@@ -18,18 +17,11 @@
             overflow: hidden; position: fixed; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             background: #e5ddd5;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Login */
-        #login-screen { position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .login-card { width: 85%; max-width: 350px; text-align: center; }
-        .login-card input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
-
-        /* Estructura Chat */
-        #chat-container { display: none; flex-direction: column; height: 100%; width: 100%; overflow: hidden; }
-        #chat-header { background: #fff; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; height: 60px; flex-shrink: 0; z-index: 10; }
+        #chat-container { display: none; flex-direction: column; height: 100vh; width: 100%; overflow: hidden; }
+        
+        #chat-header { background: #fff; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; height: 60px; flex-shrink: 0; z-index: 100; }
         .pfp-header { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #eee; }
 
         #chat-box { 
@@ -39,52 +31,60 @@
             background-size: contain;
         }
 
-        /* Mensajes */
         .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; position: relative; }
         .me { align-self: flex-end; background: var(--me-bg); border-top-right-radius: 2px; }
         .her { align-self: flex-start; background: var(--her-bg); border-top-left-radius: 2px; }
 
-        /* Entrada */
-        #input-area-container { background: transparent; width: 100%; padding: 5px 8px calc(10px + env(safe-area-inset-bottom)) 8px; box-sizing: border-box; }
-        #input-area { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
-        .input-pill { flex: 1; background: white; border-radius: 25px; display: flex; align-items: flex-end; padding: 2px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); min-width: 0; }
-        #message-input { flex: 1; border: none; padding: 10px 5px; font-size: 16px; outline: none; background: transparent; resize: none; max-height: 120px; font-family: inherit; width: 100%; }
-        
-        .action-icon { background: none; border: none; font-size: 24px; color: #666; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; justify-content: center; }
-        #right-btn { width: 48px; height: 48px; background: var(--whatsapp-green); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; border: none; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-
-        /* Modales y Capas */
+        /* CAPA OSCURA */
         .modal-overlay { 
             position: fixed; inset: 0; 
             background: rgba(0,0,0,0.4); 
-            z-index: 3999; 
-            display: none; /* Se activa al abrir cualquier menú */
+            z-index: 9000; 
+            display: none; 
         }
 
-        #msg-actions { 
-            position: fixed; bottom: 0; left: 0; width: 100%; 
-            background: white; z-index: 5001; 
-            border-radius: 20px 20px 0 0; 
-            display: none; padding: 15px; 
-            padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
+        /* MENÚS FLOTANTES - CORREGIDOS */
+        #picker-container { 
+            display: none; position: fixed; 
+            bottom: 80px; left: 5%; width: 90%; 
+            z-index: 9999; 
+        }
+
+        #menu-adjuntos { 
+            display: none; position: fixed; 
+            bottom: 80px; left: 15px; background: white; 
+            border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); 
+            z-index: 9999; 
+            overflow: hidden; width: 160px;
+        }
+
+        #input-area-container { 
+            background: #f0f0f0; width: 100%; 
+            padding: 10px 10px calc(15px + env(safe-area-inset-bottom)) 10px; 
             box-sizing: border-box; 
-            animation: slideUp 0.2s ease-out;
+            z-index: 500; 
+            position: relative;
         }
 
-        #profile-modal { 
-            position: fixed; right: -100%; top: 0; width: 80%; max-width: 300px; 
-            height: 100%; background: white; z-index: 4000; 
-            transition: 0.3s; padding: 20px; box-sizing: border-box;
-            padding-top: calc(20px + env(safe-area-inset-top));
-        }
-        #profile-modal.open { right: 0; }
-
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        #input-area { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
+        .input-pill { flex: 1; background: white; border-radius: 25px; display: flex; align-items: flex-end; padding: 2px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        #message-input { flex: 1; border: none; padding: 10px 5px; font-size: 16px; outline: none; background: transparent; resize: none; max-height: 120px; font-family: inherit; }
         
+        .action-icon { background: none; border: none; font-size: 24px; color: #666; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; justify-content: center; }
+        #right-btn { width: 48px; height: 48px; background: var(--whatsapp-green); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; border: none; flex-shrink: 0; }
+
+        /* OTROS MODALES */
+        #msg-actions { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 9999; border-radius: 20px 20px 0 0; display: none; padding: 15px; padding-bottom: calc(15px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+        #profile-modal { position: fixed; right: -100%; top: 0; width: 80%; max-width: 300px; height: 100%; background: white; z-index: 9500; transition: 0.3s; padding: 20px; box-sizing: border-box; padding-top: calc(20px + env(safe-area-inset-top)); }
+        #profile-modal.open { right: 0; }
+        
+        #login-screen { position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        .login-card { width: 85%; max-width: 350px; text-align: center; }
+        .login-card input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+
         .status-container { font-size: 10px; color: gray; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 3px; }
         .check-read { color: #34b7f1; font-weight: bold; }
-        .recording { background: #ff3b30 !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 50% { opacity: 0.7; } }
+        .reaction-badge { position: absolute; bottom: -8px; right: 5px; background: white; border-radius: 10px; font-size: 12px; padding: 1px 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -100,13 +100,20 @@
 
     <div class="modal-overlay" id="overlay" onclick="closeAllModals()"></div>
 
+    <div id="picker-container"></div>
+    <div id="menu-adjuntos">
+        <div style="padding:15px; border-bottom:1px solid #f5f5f5;" onclick="triggerInput('image/*', true)">📸 Cámara</div>
+        <div style="padding:15px; border-bottom:1px solid #f5f5f5;" onclick="triggerInput('video/*', true)">🎥 Video</div>
+        <div style="padding:15px;" onclick="triggerInput('image/*,video/*', false)">🖼️ Galería</div>
+    </div>
+
     <div id="msg-actions">
         <div style="display:flex; justify-content:space-around; font-size:26px; margin-bottom:20px;">
             <span onclick="react('❤️')">❤️</span><span onclick="react('😂')">😂</span><span onclick="react('😮')">😮</span><span onclick="react('😢')">😢</span><span onclick="react('🙏')">🙏</span><span onclick="react('👍')">👍</span>
         </div>
-        <div style="padding:15px; border-bottom:1px solid #eee; font-size:17px;" onclick="setReply()">↩️ Responder</div>
-        <div id="edit-option" style="padding:15px; border-bottom:1px solid #eee; font-size:17px;" onclick="editMsg()">✏️ Editar</div>
-        <div style="padding:15px; color:red; font-size:17px;" onclick="requestDelete()">🗑️ Borrar</div>
+        <div style="padding:15px; border-bottom:1px solid #eee;" onclick="setReply()">↩️ Responder</div>
+        <div id="edit-option" style="padding:15px; border-bottom:1px solid #eee;" onclick="editMsg()">✏️ Editar</div>
+        <div style="padding:15px; color:red;" onclick="requestDelete()">🗑️ Borrar</div>
     </div>
 
     <div id="profile-modal">
@@ -121,19 +128,19 @@
         <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Guardar</button>
     </div>
 
-    <div id="full-view" onclick="closeEphMedia()" style="position:fixed; inset:0; background:#000; z-index:5000; display:none; align-items:center; justify-content:center;"></div>
+    <div id="full-view" onclick="closeEphMedia()" style="position:fixed; inset:0; background:#000; z-index:10001; display:none; align-items:center; justify-content:center;"></div>
 
     <div id="chat-container">
         <div id="chat-header">
             <img id="her-pfp" class="pfp-header" src="">
             <div style="flex:1; margin-left:12px; min-width:0;">
-                <b id="her-name" style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">...</b>
-                <span id="her-status" style="font-size:11px; color:#888; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">...</span>
+                <b id="her-name">...</b><br>
+                <span id="her-status" style="font-size:11px; color:#888;">...</span>
             </div>
             <button class="action-icon" onclick="toggleProfile(true)">⁝</button>
         </div>
 
-        <div id="chat-box" onclick="closePopups()"></div>
+        <div id="chat-box" onclick="closeAllModals()"></div>
 
         <div id="input-area-container">
             <div id="reply-bar" style="display:none; background:white; padding:8px 15px; border-left:4px solid var(--primary); margin-bottom:5px; border-radius:10px; font-size:13px;">
@@ -143,20 +150,13 @@
 
             <div id="input-area">
                 <input type="file" id="universal-input" style="display:none">
-                <button class="action-icon" onclick="toggleMenu(event)" style="color:var(--whatsapp-green); font-size:28px;">+</button>
+                <button class="action-icon" onclick="toggleMenu(event)" style="color:var(--whatsapp-green); font-size:28px;">㊂</button>
                 <div class="input-pill">
                     <button class="action-icon" id="emoji-trigger">😊</button>
                     <textarea id="message-input" rows="1" placeholder="Mensaje" oninput="handleTyping(this)"></textarea>
                 </div>
                 <button id="right-btn"><span id="main-icon">🎙️</span></button>
             </div>
-        </div>
-
-        <div id="picker-container" style="display:none; position:absolute; bottom:85px; left:5%; width:90%; z-index:1001;"></div>
-        <div id="menu-adjuntos" style="display:none; position:absolute; bottom:85px; left:15px; background:white; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.2); z-index:1000; overflow:hidden;">
-            <div style="padding:15px; border-bottom:1px solid #f5f5f5;" onclick="triggerInput('image/*', true)">📸 Cámara</div>
-            <div style="padding:15px; border-bottom:1px solid #f5f5f5;" onclick="triggerInput('video/*', true)">🎥 Video</div>
-            <div style="padding:15px;" onclick="triggerInput('image/*,video/*', false)">🖼️ Galería</div>
         </div>
     </div>
 
@@ -182,21 +182,42 @@
         let userEmail, recorder, chunks = [], currentEphId = null;
         let selectedMsgId = null, replyMsg = null;
 
-        // Emoji Picker
         const picker = picmo.createPicker({ rootElement: document.querySelector('#picker-container') });
         picker.addEventListener('emoji:select', e => {
-            document.getElementById('message-input').value += e.emoji; handleTyping(document.getElementById('message-input'));
+            document.getElementById('message-input').value += e.emoji; 
+            handleTyping(document.getElementById('message-input'));
         });
+
         document.getElementById('emoji-trigger').onclick = (e) => {
             e.stopPropagation();
             const p = document.getElementById('picker-container');
-            const show = p.style.display === 'none';
+            const adj = document.getElementById('menu-adjuntos');
+            adj.style.display = 'none';
+            const show = p.style.display === 'none' || p.style.display === '';
             p.style.display = show ? 'block' : 'none';
             document.getElementById('overlay').style.display = show ? 'block' : 'none';
         };
 
-        // Login
+        window.toggleMenu = (e) => { 
+            e.stopPropagation(); 
+            const m = document.getElementById('menu-adjuntos'); 
+            const p = document.getElementById('picker-container');
+            p.style.display = 'none';
+            const show = m.style.display === 'none' || m.style.display === ''; 
+            m.style.display = show ? 'block' : 'none'; 
+            document.getElementById('overlay').style.display = show ? 'block' : 'none'; 
+        };
+
+        window.closeAllModals = () => {
+            document.getElementById('msg-actions').style.display = 'none';
+            document.getElementById('profile-modal').classList.remove('open');
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('picker-container').style.display = 'none';
+            document.getElementById('menu-adjuntos').style.display = 'none';
+        };
+
         window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(() => alert("Error"));
+        
         onAuthStateChanged(auth, user => {
             if (user) {
                 userEmail = user.email;
@@ -205,15 +226,6 @@
                 syncProfile();
             }
         });
-
-        // CIERRE DE MODALES (La clave de tu petición)
-        window.closeAllModals = () => {
-            document.getElementById('msg-actions').style.display = 'none';
-            document.getElementById('profile-modal').classList.remove('open');
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('picker-container').style.display = 'none';
-            document.getElementById('menu-adjuntos').style.display = 'none';
-        };
 
         window.toggleProfile = (show) => {
             document.getElementById('profile-modal').classList.toggle('open', show);
@@ -285,15 +297,12 @@
             const div = document.createElement('div');
             div.id = `msg-${id}`; div.className = `msg ${isMe ? 'me' : 'her'}`;
             let html = m.reply ? `<div style="background:rgba(0,0,0,0.05); padding:5px; border-left:3px solid var(--primary); border-radius:4px; font-size:12px; margin-bottom:5px;">${m.reply.text}</div>` : '';
-            
             if (m.type === 'text') html += `<span>${m.text}</span>`;
             else if (m.type === 'photo') html += `<img src="${m.text}" style="width:100%; border-radius:8px;" onclick="openEph('${id}','${m.text}','photo')">`;
             else if (m.type === 'video') html += `<video src="${m.text}" style="width:100%; border-radius:8px;" onclick="openEph('${id}','${m.text}','video')"></video>`;
             else if (m.type === 'audio') html += `<audio src="${m.text}" controls style="width:200px;"></audio>`;
-            
             const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-            div.innerHTML = `${html}<div class="status-container">${time} ${isMe ? (m.read ? '<span class="check-read">✓✓</span>' : '✓') : ''}</div><div class="reaction-badge" style="position:absolute; bottom:-8px; right:5px; background:white; border-radius:10px; font-size:12px; padding:1px 3px; box-shadow:0 1px 2px rgba(0,0,0,0.2); display:${m.reaction?'block':'none'}">${m.reaction||''}</div>`;
-            
+            div.innerHTML = `${html}<div class="status-container">${time} ${isMe ? (m.read ? '<span class="check-read">✓✓</span>' : '✓') : ''}</div><div class="reaction-badge" style="display:${m.reaction?'block':'none'}">${m.reaction||''}</div>`;
             div.onclick = (e) => { e.stopPropagation(); openMsgActions(id, isMe, m.text, m.type); };
             document.getElementById('chat-box').appendChild(div);
             document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
@@ -303,7 +312,7 @@
             selectedMsgId = id; window.currentMsgText = text;
             document.getElementById('edit-option').style.display = (isMe && type === 'text') ? 'block' : 'none';
             document.getElementById('msg-actions').style.display = 'block';
-            document.getElementById('overlay').style.display = 'block'; // Activar capa de cierre
+            document.getElementById('overlay').style.display = 'block'; 
         };
 
         window.react = (emoji) => { update(ref(db, `mensajes/${selectedMsgId}`), { reaction: emoji }); closeAllModals(); };
@@ -339,9 +348,7 @@
             } else { recorder.stop(); }
         }
 
-        window.toggleMenu = (e) => { e.stopPropagation(); const m = document.getElementById('menu-adjuntos'); const show = m.style.display === 'none'; m.style.display = show ? 'block' : 'none'; document.getElementById('overlay').style.display = show ? 'block' : 'none'; };
-        window.closePopups = () => { closeAllModals(); };
-        window.triggerInput = (acc, cam) => { const i = document.getElementById('universal-input'); i.accept = acc; cam ? i.setAttribute("capture", "environment") : i.removeAttribute("capture"); i.click(); closePopups(); };
+        window.triggerInput = (acc, cam) => { const i = document.getElementById('universal-input'); i.accept = acc; cam ? i.setAttribute("capture", "environment") : i.removeAttribute("capture"); i.click(); closeAllModals(); };
         document.getElementById('universal-input').onchange = (e) => {
             const f = e.target.files[0]; if(!f) return;
             const r = new FileReader(); r.onload = ev => sendMsg(ev.target.result, f.type.includes('video') ? 'video' : 'photo', true); r.readAsDataURL(f);
