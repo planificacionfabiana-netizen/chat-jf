@@ -23,18 +23,7 @@
         }
 
         #chat-container { display: none; flex-direction: column; height: 100dvh; width: 100%; }
-        
-        /* HEADER RESTAURADO CON BOTÓN DE MENÚ */
-        #chat-header { 
-            background: #fff; 
-            padding: 10px 15px; 
-            display: flex; 
-            align-items: center; 
-            border-bottom: 1px solid #eee; 
-            height: 60px; 
-            flex-shrink: 0; 
-            z-index: 100; 
-        }
+        #chat-header { background: #fff; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; height: 60px; flex-shrink: 0; z-index: 100; }
         .pfp-header { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #eee; }
 
         #chat-box { 
@@ -71,17 +60,19 @@
 
         #msg-actions { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 9999; border-radius: 20px 20px 0 0; display: none; padding: 15px; box-sizing: border-box; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
         
-        /* MODAL DE PERFIL RESTAURADO */
-        #profile-modal { position: fixed; right: -100%; top: 0; width: 85%; max-width: 320px; height: 100dvh; background: white; z-index: 9500; transition: 0.3s; padding: 20px; box-sizing: border-box; padding-top: calc(20px + env(safe-area-inset-top)); }
+        /* MODAL PERFIL ACTUALIZADO */
+        #profile-modal { position: fixed; right: -100%; top: 0; width: 85%; max-width: 320px; height: 100dvh; background: white; z-index: 9500; transition: 0.3s; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         #profile-modal.open { right: 0; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
 
         #full-view { position: fixed; inset: 0; background: #000; z-index: 10001; display: none; align-items: center; justify-content: center; }
         #full-view img, #full-view video { filter: none !important; max-width: 95%; max-height: 95%; }
-
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9000; display: none; }
     </style>
 </head>
 <body>
+
+    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>
 
     <div id="login-screen" style="position:fixed; inset:0; background:white; display:flex; align-items:center; justify-content:center; z-index:10000;">
         <div style="text-align:center; width:85%;">
@@ -93,6 +84,31 @@
     </div>
 
     <div class="modal-overlay" id="overlay" onclick="closeAllModals()"></div>
+    
+    <div id="profile-modal">
+        <h3>Ajustes de Perfil</h3>
+        <label for="new-pfp" style="display:block; text-align:center; cursor:pointer;">
+            <img id="current-pfp-edit" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; background:#eee;">
+            <p style="color:var(--primary); font-size:12px;">Cambiar foto</p>
+        </label>
+        <input type="file" id="new-pfp" accept="image/*" style="display:none" onchange="previewPfp(this)">
+        <input type="text" id="new-name" placeholder="Tu nombre" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
+        <input type="text" id="new-status" placeholder="Tu estado" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:8px;">
+        
+        <h4 style="margin-top:20px; color:#666; font-size:14px; border-bottom:1px solid #eee; padding-bottom:5px;">Notificaciones</h4>
+        <div class="setting-item">
+            <span>Sonido</span>
+            <input type="checkbox" id="cfg-sound" checked onchange="saveSettings()">
+        </div>
+        <div class="setting-item">
+            <span>Vibración</span>
+            <input type="checkbox" id="cfg-vibrate" checked onchange="saveSettings()">
+        </div>
+
+        <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; margin-top:20px;">Guardar Cambios</button>
+        <button onclick="toggleProfile(false)" style="width:100%; padding:10px; background:none; border:none; color:gray;">Cerrar</button>
+    </div>
+
     <div id="picker-container"></div>
     <div id="menu-adjuntos">
         <div style="padding:15px; border-bottom:1px solid #eee;" onclick="triggerInput('image/*', true)">📸 Cámara</div>
@@ -109,18 +125,6 @@
         <div style="padding:15px; color:red;" onclick="requestDelete()">🗑️ Borrar</div>
     </div>
 
-    <div id="profile-modal">
-        <h3>Mi Perfil</h3>
-        <label for="new-pfp" style="display:block; text-align:center; cursor:pointer;">
-            <img id="current-pfp-edit" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; background:#eee;">
-            <p style="color:var(--primary); font-size:12px;">Cambiar foto</p>
-        </label>
-        <input type="file" id="new-pfp" accept="image/*" style="display:none" onchange="previewPfp(this)">
-        <input type="text" id="new-name" placeholder="Nombre" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
-        <input type="text" id="new-status" placeholder="Estado" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:8px;">
-        <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Guardar</button>
-    </div>
-
     <div id="full-view" onclick="closeEphMedia()"></div>
 
     <div id="chat-container">
@@ -130,7 +134,8 @@
                 <b id="her-name">...</b><br>
                 <span id="her-status" style="font-size:11px; color:#888;">...</span>
             </div>
-            <button class="action-icon" onclick="toggleProfile(true)">⁝</button> </div>
+            <button class="action-icon" onclick="toggleProfile(true)">⁝</button>
+        </div>
 
         <div id="chat-box" onclick="closeAllModals()"></div>
 
@@ -171,6 +176,26 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
         let userEmail, currentEphId = null, shouldDeleteAfterView = false, selectedMsgId = null, replyMsg = null;
+        let chatLoaded = false;
+
+        // GESTIÓN DE AJUSTES
+        window.saveSettings = () => {
+            const s = { sound: document.getElementById('cfg-sound').checked, vibe: document.getElementById('cfg-vibrate').checked };
+            localStorage.setItem('chat_settings', JSON.stringify(s));
+        };
+
+        function getSettings() {
+            return JSON.parse(localStorage.getItem('chat_settings')) || { sound: true, vibe: true };
+        }
+
+        function playNotif() {
+            const cfg = getSettings();
+            if(cfg.sound) {
+                const s = document.getElementById('notif-sound');
+                s.play().catch(() => {});
+            }
+            if(cfg.vibe && navigator.vibrate) navigator.vibrate(200);
+        }
 
         function programarBorrado(id, data) {
             if (data.read && data.readAt) {
@@ -188,11 +213,14 @@
                 userEmail = user.email;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('chat-container').style.display = 'flex';
+                const cfg = getSettings();
+                document.getElementById('cfg-sound').checked = cfg.sound;
+                document.getElementById('cfg-vibrate').checked = cfg.vibe;
                 syncProfile();
+                setTimeout(() => chatLoaded = true, 2000); 
             }
         });
 
-        // FUNCIONES DE PERFIL RESTAURADAS
         window.toggleProfile = (show) => {
             document.getElementById('profile-modal').classList.toggle('open', show);
             document.getElementById('overlay').style.display = show ? 'block' : 'none';
@@ -249,7 +277,10 @@
 
         onChildAdded(ref(db, 'mensajes'), snap => {
             const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
-            if (!isMe && !m.read) update(ref(db, `mensajes/${id}`), { read: true, readAt: Date.now() });
+            if (!isMe && !m.read) {
+                update(ref(db, `mensajes/${id}`), { read: true, readAt: Date.now() });
+                if(chatLoaded) playNotif();
+            }
             renderMsg(m, id, isMe);
             programarBorrado(id, m);
         });
