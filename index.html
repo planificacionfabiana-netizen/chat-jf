@@ -450,17 +450,29 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(reg => {
           console.log('SW registrado');
-          
-          // Pide permiso para las notificaciones apenas se registra el SW
+
+          // FORZAR ACTUALIZACIÓN: Esto ayuda a que si cambias algo en el sw.js, 
+          // el celular lo tome de inmediato y no use una versión vieja.
+          reg.update();
+
           if ('Notification' in window) {
               Notification.requestPermission().then(permission => {
                   if (permission === 'granted') {
-                      console.log('Permiso de notificaciones concedido');
+                      console.log('Permiso concedido');
+                      
+                      // Opcional: Podrías verificar si la suscripción push está activa aquí
                   }
               });
           }
       })
       .catch(err => console.error('Error:', err));
+
+    // Este evento detecta si el Service Worker se actualizó mientras la app estaba abierta
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('Nueva versión del Service Worker instalada. Recargando...');
+        // No recargamos la página automáticamente para no molestar al usuario, 
+        // pero el nuevo SW ya tiene el control.
+    });
 }
     </script>
 </body>
