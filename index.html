@@ -207,7 +207,7 @@ function alertarNuevoMensaje(m) {
     const quiereSonido = document.getElementById('cfg-sound').checked;
     const quiereVibracion = document.getElementById('cfg-vibrate').checked;
 
-    if (quiereSonido) {
+    if (quiereSonido && window.notificationSound) {
         notificationSound.play().catch(e => console.log("Audio esperando clic"));
     }
     
@@ -219,9 +219,7 @@ function alertarNuevoMensaje(m) {
         navigator.serviceWorker.ready.then(registration => {
             registration.showNotification(document.getElementById('her-name').innerText || "Chat JF", {
                 body: m.type === 'text' ? m.text : "📷 Archivo multimedia",
-                // Tu nueva imagen azul/tecnológica
-                icon: 'https://i.ibb.co/YBPCxkv7/5152470745605671984.jpg', 
-                // Color verde WhatsApp para los detalles del sistema
+                icon: 'https://i.ibb.co/9HFf5TYs/Gemini-Generated-Image-i1ohiji1ohiji1oh.png', 
                 color: '#075e54',
                 vibrate: [200, 100, 200],
                 tag: 'chat-jf',
