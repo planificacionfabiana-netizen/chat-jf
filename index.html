@@ -217,22 +217,18 @@ function alertarNuevoMensaje(m) {
 
     if (Notification.permission === "granted") {
         navigator.serviceWorker.ready.then(registration => {
-            // Usamos un try-catch por si acaso hay algún error con la imagen
-            try {
-                registration.showNotification(document.getElementById('her-name').innerText || "Chat JF", {
-                    body: m.type === 'text' ? m.text : "📷 Archivo multimedia",
-                    icon: 'https://i.ibb.co/9HFf5TYs/Gemini-Generated-Image-i1ohiji1ohiji1oh.png', 
-                    badge: './JF.png', 
-                    color: '#00a884',
-                    vibrate: [200, 100, 200],
-                    tag: 'chat-jf',
-                    renotify: true,
-                    data: { url: './' }
-                });
-            } catch (err) {
-                console.error("Error lanzando notif:", err);
-            }
-        }).catch(err => console.error("Service Worker no listo:", err));
+            registration.showNotification(document.getElementById('her-name').innerText || "Chat JF", {
+                body: m.type === 'text' ? m.text : "📷 Archivo multimedia",
+                
+                // Hemos quitado 'icon' y 'badge' para que solo salga la campanita nativa
+                
+                color: '#00a884', 
+                vibrate: [200, 100, 200],
+                tag: 'chat-jf',
+                renotify: true,
+                data: { url: './' }
+            });
+        });
     }
 }
         
