@@ -129,7 +129,17 @@
         <input type="file" id="new-pfp" accept="image/*" style="display:none" onchange="previewPfp(this)">
         <input type="text" id="new-name" placeholder="Nombre" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
         <input type="text" id="new-status" placeholder="Estado" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:8px;">
-        <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Guardar</button>
+
+<div style="margin-bottom: 20px; padding-left: 5px; display: flex; flex-direction: column; gap: 15px; text-align: left;">
+    <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #444; cursor: pointer;">
+        <input type="checkbox" id="cfg-sound" checked style="width: 18px; height: 18px;"> 🔔 Activar Sonido
+    </label>
+    <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #444; cursor: pointer;">
+        <input type="checkbox" id="cfg-vibrate" checked style="width: 18px; height: 18px;"> 📳 Activar Vibración
+    </label>
+</div>
+
+<button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Guardar</button>
     </div>
 
     <div id="full-view" onclick="closeEphMedia()"></div>
@@ -189,11 +199,17 @@ const notificationSound = new Audio('https://raw.githubusercontent.com/Aris-Tott
 let userEmail, currentEphId = null, shouldDeleteAfterView = false, selectedMsgId = null, replyMsg = null;
 
 function alertarNuevoMensaje() {
-    // Hace sonar el audio de WhatsApp
-    notificationSound.play().catch(e => console.log("Audio esperando clic inicial"));
+    // Primero, miramos si los botoncitos del menú están activados
+    const quiereSonido = document.getElementById('cfg-sound').checked;
+    const quiereVibracion = document.getElementById('cfg-vibrate').checked;
+
+    // Solo suena si el usuario dejó el check de sonido marcado
+    if (quiereSonido) {
+        notificationSound.play().catch(e => console.log("Audio esperando clic"));
+    }
     
-    // Hace vibrar el celular (200 milisegundos)
-    if (navigator.vibrate) {
+    // Solo vibra si el usuario dejó el check de vibración marcado
+    if (quiereVibracion && navigator.vibrate) {
         navigator.vibrate(200);
     }
 }
@@ -411,4 +427,5 @@ function alertarNuevoMensaje() {
     </script>
 </body>
 </html>
+
 
