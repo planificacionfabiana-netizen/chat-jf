@@ -215,16 +215,18 @@ function alertarNuevoMensaje(m) {
         navigator.vibrate(200);
     }
 
-    // --- ESTO LANZA LA NOTIFICACIÓN EMERGENTE ---
     if (Notification.permission === "granted") {
         navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification("Nuevo mensaje de " + (document.getElementById('her-name').innerText || "Chat JF"), {
-                body: m.type === 'text' ? m.text : "Te envió un archivo multimedia",
-                icon: 'https://i.ibb.co/CfX4NRr/JF.png',
-                badge: 'https://i.ibb.co/CfX4NRr/JF.png',
+            registration.showNotification(document.getElementById('her-name').innerText || "Chat JF", {
+                body: m.type === 'text' ? m.text : "📷 Archivo multimedia",
+                // Tu nueva imagen azul/tecnológica
+                icon: 'https://i.ibb.co/YBPCxkv7/5152470745605671984.jpg', 
+                // Color verde WhatsApp para los detalles del sistema
+                color: '#075e54',
                 vibrate: [200, 100, 200],
-                tag: 'nuevo-mensaje', // Evita que se amontonen mil notificaciones
-                renotify: true
+                tag: 'chat-jf',
+                renotify: true,
+                data: { url: './' }
             });
         });
     }
