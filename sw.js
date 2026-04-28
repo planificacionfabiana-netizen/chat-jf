@@ -1,5 +1,14 @@
-// Service Worker básico para permitir la instalación
-self.addEventListener('fetch', function(event) {
-    // Aquí podrías programar que el chat funcione sin internet, 
-    // pero por ahora lo dejamos pasar para que sea quirúrgico.
+const CACHE_NAME = 'chat-jf-v1';
+
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+    // Esto es lo que engaña al navegador para que crea que es una app offline
+    event.respondWith(fetch(event.request));
 });
