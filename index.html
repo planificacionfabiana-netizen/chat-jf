@@ -430,13 +430,10 @@ function alertarNuevoMensaje() {
         });
         document.getElementById('emoji-trigger').onclick = (e) => { e.stopPropagation(); document.getElementById('picker-container').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; };
  
-    // Registro del Service Worker para que sea una PWA
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('App lista para instalar', reg))
-            .catch(err => console.log('Error al registrar App', err));
-    });
+ if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registrado', reg))
+      .catch(err => console.error('Error al registrar SW', err));
 }
     </script>
 </body>
