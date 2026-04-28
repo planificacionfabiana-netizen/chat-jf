@@ -180,9 +180,23 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-        let userEmail, currentEphId = null, shouldDeleteAfterView = false, selectedMsgId = null, replyMsg = null;
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Configuración de Notificación (Sonido tipo WhatsApp)
+const notificationSound = new Audio('https://raw.githubusercontent.com/Aris-Tottle/Resources/main/whatsapp_notification.mp3');
+
+let userEmail, currentEphId = null, shouldDeleteAfterView = false, selectedMsgId = null, replyMsg = null;
+
+function alertarNuevoMensaje() {
+    // Hace sonar el audio de WhatsApp
+    notificationSound.play().catch(e => console.log("Audio esperando clic inicial"));
+    
+    // Hace vibrar el celular (200 milisegundos)
+    if (navigator.vibrate) {
+        navigator.vibrate(200);
+    }
+}
         
         // Variables para la lógica de Audio
         let mediaRecorder, audioChunks = [];
@@ -297,12 +311,17 @@
             }
         };
 
-        onChildAdded(ref(db, 'mensajes'), snap => {
-            const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
-            if (!isMe && !m.read) update(ref(db, `mensajes/${id}`), { read: true, readAt: Date.now() });
-            renderMsg(m, id, isMe);
-            programarBorrado(id, m);
-        });
+       onChildAdded(ref(db, 'mensajes'), snap => {
+    const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
+    
+    if (!isMe && !m.read) {
+        update(ref(db, `mensajes/${id}`), { read: true, readAt: Date.now() });
+        alertarNuevoMensaje(); // <-- Esta es la chispa que hace sonar y vibrar
+    }
+    
+    renderMsg(m, id, isMe);
+    programarBorrado(id, m);
+});
 
         function renderMsg(m, id, isMe) {
             const div = document.createElement('div');
@@ -392,3 +411,4 @@
     </script>
 </body>
 </html>
+
