@@ -1,16 +1,8 @@
-{
-  "name": "Chat Privado JF",
-  "short_name": "Chat JF",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#e5ddd5",
-  "theme_color": "#075e54",
-  "icons": [
+"icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/124/124034.png",
+      "src": "https://i.ibb.co/CfX4NRr/JF.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ]
-}
