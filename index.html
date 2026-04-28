@@ -430,8 +430,8 @@ function alertarNuevoMensaje() {
         });
         document.getElementById('emoji-trigger').onclick = (e) => { e.stopPropagation(); document.getElementById('picker-container').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; };
  
- if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js') // <-- El ./ es lo que falta
       .then(reg => console.log('SW registrado'))
       .catch(err => console.error('Error:', err));
 }
