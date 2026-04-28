@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chat Privado JF</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#075e54">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/124/124034.png">
     <style>
         :root { 
             --primary: #0084ff; 
@@ -424,6 +429,15 @@ function alertarNuevoMensaje() {
             handleTyping(input);
         });
         document.getElementById('emoji-trigger').onclick = (e) => { e.stopPropagation(); document.getElementById('picker-container').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; };
+ 
+    // Registro del Service Worker para que sea una PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('App lista para instalar', reg))
+            .catch(err => console.log('Error al registrar App', err));
+    });
+}
     </script>
 </body>
 </html>
