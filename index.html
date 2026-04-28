@@ -4,67 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Chat Privado JF</title>
     <style>
-        :root { 
-            --primary: #0084ff; 
-            --me-bg: #d9fdd3; 
-            --her-bg: #ffffff; 
-            --whatsapp-green: #075e54; 
-        }
-        
-        html, body { 
-            margin: 0; padding: 0; 
-            width: 100%; 
-            height: 100dvh; 
-            overflow: hidden; 
-            position: fixed; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: #e5ddd5;
-        }
-
+        :root { --primary: #0084ff; --me-bg: #d9fdd3; --her-bg: #ffffff; --whatsapp-green: #075e54; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100dvh; overflow: hidden; position: fixed; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #e5ddd5; }
         #chat-container { display: none; flex-direction: column; height: 100dvh; width: 100%; }
         #chat-header { background: #fff; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; height: 60px; flex-shrink: 0; z-index: 100; }
         .pfp-header { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #eee; }
-
-        #chat-box { 
-            flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; 
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-size: contain; -webkit-overflow-scrolling: touch;
-        }
-
+        #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: contain; }
         .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; position: relative; }
         .me { align-self: flex-end; background: var(--me-bg); border-top-right-radius: 2px; }
         .her { align-self: flex-start; background: var(--her-bg); border-top-left-radius: 2px; }
-
-        .msg img, .msg video {
-            filter: blur(15px);
-            width: 150px; height: 150px;
-            object-fit: cover; border-radius: 8px;
-            display: block; margin-top: 5px; cursor: pointer;
-        }
-
+        .msg img, .msg video { filter: blur(15px); width: 150px; height: 150px; object-fit: cover; border-radius: 8px; display: block; margin-top: 5px; cursor: pointer; }
         .status-container { font-size: 10px; color: gray; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 3px; }
         .check-read { color: #34b7f1; font-weight: bold; }
         .reaction-badge { position: absolute; bottom: -8px; right: 5px; background: white; border-radius: 10px; font-size: 12px; padding: 1px 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-
-        #picker-container { display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; z-index: 9999; }
+        #picker-container { display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; z-index: 9999; background: white; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); }
         #menu-adjuntos { display: none; position: fixed; bottom: 80px; left: 15px; background: white; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); z-index: 9999; width: 160px; overflow: hidden; }
-
         #input-area-container { background: #f0f0f0; width: 100%; padding: 8px; box-sizing: border-box; flex-shrink: 0; }
         #input-area { display: flex; align-items: flex-end; gap: 8px; }
         .input-pill { flex: 1; background: white; border-radius: 25px; display: flex; align-items: flex-end; padding: 2px 12px; }
         #message-input { flex: 1; border: none; padding: 10px 5px; font-size: 16px; outline: none; background: transparent; resize: none; max-height: 120px; }
-        
         .action-icon { background: none; border: none; font-size: 24px; color: #666; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; justify-content: center; }
         #right-btn { width: 45px; height: 45px; background: var(--whatsapp-green); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; border: none; flex-shrink: 0; }
-
-        #msg-actions { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 9999; border-radius: 20px 20px 0 0; display: none; padding: 15px; box-sizing: border-box; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
+        #msg-actions { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 9999; border-radius: 20px 20px 0 0; display: none; padding: 15px; box-sizing: border-box; }
         #profile-modal { position: fixed; right: -100%; top: 0; width: 85%; max-width: 320px; height: 100dvh; background: white; z-index: 9500; transition: 0.3s; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         #profile-modal.open { right: 0; }
         .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
-
         #full-view { position: fixed; inset: 0; background: #000; z-index: 10001; display: none; align-items: center; justify-content: center; }
         #full-view img, #full-view video { filter: none !important; max-width: 95%; max-height: 95%; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9000; display: none; }
@@ -86,32 +52,37 @@
     <div class="modal-overlay" id="overlay" onclick="closeAllModals()"></div>
     
     <div id="profile-modal">
-        <h3>Ajustes de Perfil</h3>
+        <h3>Ajustes</h3>
         <label for="new-pfp" style="display:block; text-align:center; cursor:pointer;">
             <img id="current-pfp-edit" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; background:#eee;">
             <p style="color:var(--primary); font-size:12px;">Cambiar foto</p>
         </label>
         <input type="file" id="new-pfp" accept="image/*" style="display:none" onchange="previewPfp(this)">
-        <input type="text" id="new-name" placeholder="Tu nombre" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
-        <input type="text" id="new-status" placeholder="Tu estado" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:8px;">
-        
-        <h4 style="margin-top:20px; color:#666; font-size:14px; border-bottom:1px solid #eee; padding-bottom:5px;">Notificaciones</h4>
-        <div class="setting-item">
-            <span>Sonido</span>
-            <input type="checkbox" id="cfg-sound" checked onchange="saveSettings()">
-        </div>
-        <div class="setting-item">
-            <span>Vibración</span>
-            <input type="checkbox" id="cfg-vibrate" checked onchange="saveSettings()">
-        </div>
-        <div class="setting-item">
-            <span>Notif. de Sistema</span>
-            <button onclick="requestNotifPermission()" style="font-size:10px; padding:5px; border-radius:5px; border:1px solid #ddd;">Activar</button>
-        </div>
-
-        <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; margin-top:20px;">Guardar Cambios</button>
-        <button onclick="toggleProfile(false)" style="width:100%; padding:10px; background:none; border:none; color:gray;">Cerrar</button>
+        <input type="text" id="new-name" placeholder="Nombre" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ddd; border-radius:8px;">
+        <input type="text" id="new-status" placeholder="Estado" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:8px;">
+        <div class="setting-item"><span>Sonido</span><input type="checkbox" id="cfg-sound" checked onchange="saveSettings()"></div>
+        <div class="setting-item"><span>Vibración</span><input type="checkbox" id="cfg-vibrate" checked onchange="saveSettings()"></div>
+        <button onclick="requestNotifPermission()" style="width:100%; padding:8px; margin:10px 0; border:1px solid #ddd; border-radius:5px;">Activar Notificaciones</button>
+        <button onclick="saveProfile()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Guardar</button>
     </div>
+
+    <div id="menu-adjuntos">
+        <div style="padding:15px; border-bottom:1px solid #eee;" onclick="triggerInput('image/*', true)">📸 Cámara</div>
+        <div style="padding:15px; border-bottom:1px solid #eee;" onclick="triggerInput('video/*', true)">🎥 Video</div>
+        <div style="padding:15px;" onclick="triggerInput('image/*,video/*', false)">🖼️ Galería</div>
+    </div>
+
+    <div id="msg-actions">
+        <div style="display:flex; justify-content:space-around; font-size:26px; margin-bottom:20px;">
+            <span onclick="react('❤️')">❤️</span><span onclick="react('😂')">😂</span><span onclick="react('😮')">😮</span><span onclick="react('😢')">😢</span><span onclick="react('🙏')">🙏</span><span onclick="react('👍')">👍</span>
+        </div>
+        <div style="padding:15px; border-bottom:1px solid #eee;" onclick="setReply()">↩️ Responder</div>
+        <div id="edit-option" style="padding:15px; border-bottom:1px solid #eee;" onclick="editMsg()">✏️ Editar</div>
+        <div style="padding:15px; color:red;" onclick="requestDelete()">🗑️ Borrar</div>
+    </div>
+
+    <div id="picker-container"></div>
+    <div id="full-view" onclick="closeEphMedia()"></div>
 
     <div id="chat-container">
         <div id="chat-header">
@@ -122,19 +93,17 @@
             </div>
             <button class="action-icon" onclick="toggleProfile(true)">⁝</button>
         </div>
-
         <div id="chat-box" onclick="closeAllModals()"></div>
-
         <div id="input-area-container">
             <div id="reply-bar" style="display:none; background:white; padding:8px 15px; border-left:4px solid var(--primary); margin-bottom:5px; border-radius:10px; font-size:13px; position:relative;">
-                <div id="reply-text" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#555; padding-right:20px;"></div>
+                <div id="reply-text" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#555;"></div>
                 <div onclick="cancelReply()" style="position:absolute; right:10px; top:8px; color:gray; font-weight:bold; cursor:pointer;">✕</div>
             </div>
             <div id="input-area">
                 <input type="file" id="universal-input" style="display:none">
-                <button class="action-icon" onclick="toggleMenu(event)" style="color:var(--whatsapp-green); font-size:28px;">㊂</button>
+                <button class="action-icon" onclick="toggleMenu(event)">㊂</button>
                 <div class="input-pill">
-                    <button class="action-icon" id="emoji-trigger">😊</button>
+                    <button class="action-icon" onclick="toggleEmojis(event)">😊</button>
                     <textarea id="message-input" rows="1" placeholder="Mensaje" oninput="handleTyping(this)"></textarea>
                 </div>
                 <button id="right-btn"><span id="main-icon">🎙️</span></button>
@@ -142,7 +111,7 @@
         </div>
     </div>
 
-    <div id="msg-actions" style="display:none;"></div> <script src="https://unpkg.com/picmo@latest/dist/umd/index.js"></script>
+    <script src="https://unpkg.com/picmo@latest/dist/umd/index.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -161,84 +130,119 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-        let userEmail, chatLoaded = false;
+        let userEmail, currentEphId = null, shouldDeleteAfterView = false, selectedMsgId = null, replyMsg = null, chatLoaded = false;
 
-        // SISTEMA DE NOTIFICACIONES DE SISTEMA
-        window.requestNotifPermission = () => {
-            Notification.requestPermission().then(permission => {
-                if(permission === 'granted') alert("¡Notificaciones activadas!");
-            });
+        // --- FUNCIONES DE NAVEGACIÓN Y UI ---
+        window.toggleMenu = (e) => { e.stopPropagation(); document.getElementById('menu-adjuntos').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; };
+        window.toggleEmojis = (e) => { e.stopPropagation(); document.getElementById('picker-container').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; };
+        window.closeAllModals = () => { 
+            document.getElementById('menu-adjuntos').style.display = 'none'; 
+            document.getElementById('picker-container').style.display = 'none'; 
+            document.getElementById('msg-actions').style.display = 'none'; 
+            document.getElementById('profile-modal').classList.remove('open');
+            document.getElementById('overlay').style.display = 'none'; 
         };
+        window.toggleProfile = (s) => { document.getElementById('profile-modal').classList.toggle('open', s); document.getElementById('overlay').style.display = s ? 'block' : 'none'; };
 
-        function showSystemNotification(m) {
-            if (Notification.permission === "granted" && document.hidden) {
-                const title = document.getElementById('her-name').innerText;
-                const options = {
-                    body: m.type === 'text' ? m.text : "Te envió un archivo multimedia",
-                    icon: document.getElementById('her-pfp').src,
-                    vibrate: [200, 100, 200]
-                };
-                new Notification(title, options);
-            }
-        }
-
-        // REPRODUCCIÓN DE SONIDO Y VIBRACIÓN
+        // --- NOTIFICACIONES Y SONIDO ---
+        window.requestNotifPermission = () => Notification.requestPermission();
+        window.saveSettings = () => localStorage.setItem('chat_settings', JSON.stringify({ sound: document.getElementById('cfg-sound').checked, vibe: document.getElementById('cfg-vibrate').checked }));
         function playNotif() {
             const cfg = JSON.parse(localStorage.getItem('chat_settings')) || { sound: true, vibe: true };
-            if(cfg.sound) {
-                const s = document.getElementById('notif-sound');
-                s.play().catch(() => {});
-            }
+            if(cfg.sound) document.getElementById('notif-sound').play().catch(()=>{});
             if(cfg.vibe && navigator.vibrate) navigator.vibrate(200);
+            if(Notification.permission === "granted" && document.hidden) new Notification(document.getElementById('her-name').innerText, { body: "Nuevo mensaje" });
         }
 
-        // TODA TU LÓGICA ORIGINAL DE FIREBASE (Borrado, checks, etc) SIGUE AQUÍ
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                userEmail = user.email;
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('chat-container').style.display = 'flex';
-                syncProfile();
-                setTimeout(() => chatLoaded = true, 2000); 
+        // --- PERFIL Y FIREBASE ---
+        onAuthStateChanged(auth, u => { if(u) { userEmail = u.email; document.getElementById('login-screen').style.display='none'; document.getElementById('chat-container').style.display='flex'; syncProfile(); setTimeout(()=>chatLoaded=true, 2000); } });
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
+        
+        function syncProfile() {
+            const uid = userEmail.replace(/\./g, '_');
+            onValue(ref(db, 'users'), snap => {
+                const data = snap.val(); if(!data) return;
+                for(let id in data) {
+                    if(id === uid) {
+                        document.getElementById('new-name').value = data[id].name || "";
+                        document.getElementById('new-status').value = data[id].status || "";
+                        document.getElementById('current-pfp-edit').src = data[id].pfp || "";
+                    } else {
+                        document.getElementById('her-name').innerText = data[id].name || "Ella";
+                        document.getElementById('her-status').innerText = data[id].status || "...";
+                        document.getElementById('her-pfp').src = data[id].pfp || "";
+                    }
+                }
+            });
+        }
+        window.saveProfile = () => {
+            update(ref(db, `users/${userEmail.replace(/\./g, '_')}`), { name: document.getElementById('new-name').value, status: document.getElementById('new-status').value, pfp: document.getElementById('current-pfp-edit').src }).then(()=>toggleProfile(false));
+        };
+        window.previewPfp = (i) => { const r = new FileReader(); r.onload = e => document.getElementById('current-pfp-edit').src = e.target.result; r.readAsDataURL(i.files[0]); };
+
+        // --- CHAT Y MENSAJES ---
+        window.handleTyping = (el) => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; document.getElementById('main-icon').innerText = el.value.trim() ? "➤" : "🎙️"; };
+        document.getElementById('right-btn').onclick = () => {
+            const input = document.getElementById('message-input');
+            if(input.value.trim()) {
+                push(ref(db, 'mensajes'), { sender: userEmail, text: input.value, type: 'text', read: false, timestamp: serverTimestamp(), reply: replyMsg });
+                input.value = ''; handleTyping(input); cancelReply();
             }
-        });
+        };
 
         onChildAdded(ref(db, 'mensajes'), snap => {
             const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
-            if (!isMe && !m.read) {
-                update(ref(db, `mensajes/${id}`), { read: true, readAt: Date.now() });
-                if(chatLoaded) {
-                    playNotif();
-                    showSystemNotification(m); // Notificación de sistema si está oculto
-                }
-            }
+            if(!isMe && !m.read) { update(ref(db, `mensajes/${id}`), { read: true, readAt: Date.now() }); if(chatLoaded) playNotif(); }
             renderMsg(m, id, isMe);
-            programarBorrado(id, m);
+            if(m.read && m.readAt) programarBorrado(id, m);
         });
 
-        // FUNCIONES DE BORRADO DE 5 MINUTOS
-        function programarBorrado(id, data) {
-            if (data.read && data.readAt) {
-                const cincoMinutos = 5 * 60 * 1000;
-                const tiempoRestante = (data.readAt + cincoMinutos) - Date.now();
-                if (tiempoRestante <= 0) remove(ref(db, `mensajes/${id}`));
-                else setTimeout(() => remove(ref(db, `mensajes/${id}`)), tiempoRestante);
-            }
+        function renderMsg(m, id, isMe) {
+            const div = document.createElement('div'); div.id = `msg-${id}`; div.className = `msg ${isMe ? 'me' : 'her'}`;
+            let content = m.reply ? `<div style="background:rgba(0,0,0,0.05);padding:5px;border-left:3px solid var(--primary);font-size:12px;margin-bottom:5px;">${m.reply.text}</div>` : '';
+            if(m.type === 'text') content += `<span>${m.text}</span>`;
+            else content += `<img src="${m.text}" onclick="openEph('${id}','${m.text}', '${m.type}', ${isMe})">`;
+            const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+            div.innerHTML = `${content}<div class="status-container">${time} ${isMe ? (m.read ? '<span class="check-read">✓✓</span>' : '✓') : ''}</div><div class="reaction-badge" style="display:${m.reaction?'block':'none'}">${m.reaction||''}</div>`;
+            div.onclick = (e) => { e.stopPropagation(); selectedMsgId = id; window.currentMsgText = m.text; document.getElementById('msg-actions').style.display='block'; document.getElementById('overlay').style.display='block'; };
+            document.getElementById('chat-box').appendChild(div);
+            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
         }
 
-        // ... [Aquí se mantienen todas las funciones de UI, Perfil, Multimedia Blur, etc del código anterior] ...
-        // (Nota: El código completo funcional está integrado para que al copiarlo no falte nada de lo que pediste)
+        // --- FUNCIONES DE MENSAJE (Reacciones, borrar, responder) ---
+        window.react = (e) => { update(ref(db, `mensajes/${selectedMsgId}`), { reaction: e }); closeAllModals(); };
+        window.setReply = () => { replyMsg = { text: window.currentMsgText }; document.getElementById('reply-bar').style.display = 'block'; document.getElementById('reply-text').innerText = window.currentMsgText; closeAllModals(); };
+        window.cancelReply = () => { replyMsg = null; document.getElementById('reply-bar').style.display = 'none'; };
+        window.requestDelete = () => { remove(ref(db, `mensajes/${selectedMsgId}`)); closeAllModals(); };
+        window.editMsg = () => { const n = prompt("Editar:", window.currentMsgText); if(n) update(ref(db, `mensajes/${selectedMsgId}`), {text:n}); closeAllModals(); };
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(() => alert("Error"));
-        window.saveSettings = () => {
-            const s = { sound: document.getElementById('cfg-sound').checked, vibe: document.getElementById('cfg-vibrate').checked };
-            localStorage.setItem('chat_settings', JSON.stringify(s));
+        // --- MULTIMEDIA Y BORRADO ---
+        window.triggerInput = (a, c) => { const i = document.getElementById('universal-input'); i.accept = a; if(c) i.setAttribute("capture", "environment"); else i.removeAttribute("capture"); i.click(); };
+        document.getElementById('universal-input').onchange = (e) => {
+            const f = e.target.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload = ev => push(ref(db, 'mensajes'), { sender: userEmail, text: ev.target.result, type: f.type.includes('video') ? 'video' : 'photo', read: false, timestamp: serverTimestamp() });
+            r.readAsDataURL(f); closeAllModals();
         };
-        window.toggleProfile = (show) => {
-            document.getElementById('profile-modal').classList.toggle('open', show);
-            document.getElementById('overlay').style.display = show ? 'block' : 'none';
-        };
-        // [Resto de lógica de renderMsg, openEph, etc idéntica al anterior para cumplir el checklist]
+        window.openEph = (id, url, type, me) => { currentEphId = id; shouldDeleteAfterView = !me; const fv = document.getElementById('full-view'); fv.innerHTML = type==='photo' ? `<img src="${url}">` : `<video src="${url}" autoplay controls></video>`; fv.style.display='flex'; };
+        window.closeEphMedia = () => { if(currentEphId && shouldDeleteAfterView) remove(ref(db, `mensajes/${currentEphId}`)); document.getElementById('full-view').style.display='none'; };
+        function programarBorrado(id, data) {
+            const ms = (data.readAt + (5 * 60 * 1000)) - Date.now();
+            setTimeout(() => remove(ref(db, `mensajes/${id}`)), Math.max(ms, 0));
+        }
+
+        onChildChanged(ref(db, 'mensajes'), snap => {
+            const m = snap.val(); const el = document.getElementById(`msg-${snap.key}`);
+            if(el) {
+                const rb = el.querySelector('.reaction-badge'); if(rb) { rb.innerText = m.reaction||''; rb.style.display = m.reaction?'block':'none'; }
+                const st = el.querySelector('.status-container'); if(st && m.read && !st.innerHTML.includes('✓✓')) st.innerHTML = st.innerHTML.replace('✓', '<span class="check-read">✓✓</span>');
+                if(m.read && m.readAt) programarBorrado(snap.key, m);
+            }
+        });
+        onChildRemoved(ref(db, 'mensajes'), snap => document.getElementById(`msg-${snap.key}`)?.remove());
+
+        // --- EMOJIS ---
+        const picker = picmo.createPicker({ rootElement: document.querySelector('#picker-container') });
+        picker.addEventListener('emoji:select', e => { const i = document.getElementById('message-input'); i.value += e.emoji; handleTyping(i); });
     </script>
 </body>
 </html>
