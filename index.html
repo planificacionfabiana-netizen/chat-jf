@@ -219,12 +219,18 @@ function alertarNuevoMensaje(m) {
         navigator.serviceWorker.ready.then(registration => {
             registration.showNotification(document.getElementById('her-name').innerText || "Chat JF", {
                 body: m.type === 'text' ? m.text : "📷 Archivo multimedia",
-                icon: 'https://i.ibb.co/9HFf5TYs/Gemini-Generated-Image-i1ohiji1ohiji1oh.png', 
-                color: '#075e54',
-                vibrate: [200, 100, 200],
-                tag: 'chat-jf',
-                renotify: true,
-                data: { url: './' }
+    
+    // Icono principal (el de Gemini que te gustó)
+    icon: 'https://i.ibb.co/9HFf5TYs/Gemini-Generated-Image-i1ohiji1ohiji1oh.png', 
+    
+    // Icono de la barra de estado (el nuevo JF.png que subiste a GitHub)
+    badge: './JF.png', 
+    
+    color: '#075e54',
+    vibrate: [200, 100, 200],
+    tag: 'chat-jf',
+    renotify: true,
+    data: { url: './' }
             });
         });
     }
