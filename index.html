@@ -203,19 +203,30 @@ const notificationSound = new Audio('https://raw.githubusercontent.com/Aris-Tott
 
 let userEmail, currentEphId = null, shouldDeleteAfterView = false, selectedMsgId = null, replyMsg = null;
 
-function alertarNuevoMensaje() {
-    // Primero, miramos si los botoncitos del menú están activados
+function alertarNuevoMensaje(m) {
     const quiereSonido = document.getElementById('cfg-sound').checked;
     const quiereVibracion = document.getElementById('cfg-vibrate').checked;
 
-    // Solo suena si el usuario dejó el check de sonido marcado
     if (quiereSonido) {
         notificationSound.play().catch(e => console.log("Audio esperando clic"));
     }
     
-    // Solo vibra si el usuario dejó el check de vibración marcado
     if (quiereVibracion && navigator.vibrate) {
         navigator.vibrate(200);
+    }
+
+    // --- ESTO LANZA LA NOTIFICACIÓN EMERGENTE ---
+    if (Notification.permission === "granted") {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification("Nuevo mensaje de " + (document.getElementById('her-name').innerText || "Chat JF"), {
+                body: m.type === 'text' ? m.text : "Te envió un archivo multimedia",
+                icon: 'https://i.ibb.co/CfX4NRr/JF.png',
+                badge: 'https://i.ibb.co/CfX4NRr/JF.png',
+                vibrate: [200, 100, 200],
+                tag: 'nuevo-mensaje', // Evita que se amontonen mil notificaciones
+                renotify: true
+            });
+        });
     }
 }
         
@@ -332,12 +343,15 @@ function alertarNuevoMensaje() {
             }
         };
 
-       onChildAdded(ref(db, 'mensajes'), snap => {
-    const m = snap.val(); const id = snap.key; const isMe = m.sender === userEmail;
+  onChildAdded(ref(db, 'mensajes'), snap => {
+    const m = snap.val(); 
+    const id = snap.key; 
+    const isMe = m.sender === userEmail;
     
     if (!isMe && !m.read) {
         update(ref(db, `mensajes/${id}`), { read: true, readAt: Date.now() });
-        alertarNuevoMensaje(); // <-- Esta es la chispa que hace sonar y vibrar
+        // Aquí es donde le pasamos el mensaje 'm' a la alerta
+        alertarNuevoMensaje(m); 
     }
     
     renderMsg(m, id, isMe);
