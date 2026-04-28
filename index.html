@@ -24,7 +24,6 @@
 
         #chat-container { display: none; flex-direction: column; height: 100dvh; width: 100%; }
         
-        /* HEADER RESTAURADO CON BOTÓN DE MENÚ */
         #chat-header { 
             background: #fff; 
             padding: 10px 15px; 
@@ -53,6 +52,9 @@
             object-fit: cover; border-radius: 8px;
             display: block; margin-top: 5px; cursor: pointer;
         }
+        
+        /* Estilo para el reproductor de audio en el chat */
+        .msg audio { max-width: 100%; margin-top: 5px; display: block; }
 
         .status-container { font-size: 10px; color: gray; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 3px; }
         .check-read { color: #34b7f1; font-weight: bold; }
@@ -67,11 +69,20 @@
         #message-input { flex: 1; border: none; padding: 10px 5px; font-size: 16px; outline: none; background: transparent; resize: none; max-height: 120px; }
         
         .action-icon { background: none; border: none; font-size: 24px; color: #666; cursor: pointer; padding: 8px 4px; display: flex; align-items: center; justify-content: center; }
-        #right-btn { width: 45px; height: 45px; background: var(--whatsapp-green); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; border: none; flex-shrink: 0; }
+        
+        /* Animación para el botón de grabado */
+        #right-btn { 
+            width: 45px; height: 45px; 
+            background: var(--whatsapp-green); 
+            border-radius: 50%; color: white; 
+            display: flex; align-items: center; justify-content: center; 
+            border: none; flex-shrink: 0; 
+            transition: background 0.3s, transform 0.2s;
+        }
+        #right-btn.recording { background: #ff3b30; transform: scale(1.1); }
 
         #msg-actions { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 9999; border-radius: 20px 20px 0 0; display: none; padding: 15px; box-sizing: border-box; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
         
-        /* MODAL DE PERFIL RESTAURADO */
         #profile-modal { position: fixed; right: -100%; top: 0; width: 85%; max-width: 320px; height: 100dvh; background: white; z-index: 9500; transition: 0.3s; padding: 20px; box-sizing: border-box; padding-top: calc(20px + env(safe-area-inset-top)); }
         #profile-modal.open { right: 0; }
 
@@ -130,7 +141,8 @@
                 <b id="her-name">...</b><br>
                 <span id="her-status" style="font-size:11px; color:#888;">...</span>
             </div>
-            <button class="action-icon" onclick="toggleProfile(true)">⁝</button> </div>
+            <button class="action-icon" onclick="toggleProfile(true)">⁝</button> 
+        </div>
 
         <div id="chat-box" onclick="closeAllModals()"></div>
 
@@ -171,6 +183,9 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
         let userEmail, currentEphId = null, shouldDeleteAfterView = false, selectedMsgId = null, replyMsg = null;
+        
+        // Variables para la lógica de Audio
+        let mediaRecorder, audioChunks = [];
 
         function programarBorrado(id, data) {
             if (data.read && data.readAt) {
@@ -192,7 +207,6 @@
             }
         });
 
-        // FUNCIONES DE PERFIL RESTAURADAS
         window.toggleProfile = (show) => {
             document.getElementById('profile-modal').classList.toggle('open', show);
             document.getElementById('overlay').style.display = show ? 'block' : 'none';
@@ -236,14 +250,50 @@
             document.getElementById('main-icon').innerText = el.value.trim() ? "➤" : "🎙️";
         };
 
-        document.getElementById('right-btn').onclick = () => {
+        // LÓGICA DE BOTÓN DERECHO (TEXTO O AUDIO)
+        document.getElementById('right-btn').onclick = async () => {
             const input = document.getElementById('message-input');
+            const btn = document.getElementById('right-btn');
+            
+            // Si hay texto, enviamos texto
             if (input.value.trim()) {
                 push(ref(db, 'mensajes'), { 
                     sender: userEmail, text: input.value, type: 'text', 
                     read: false, timestamp: serverTimestamp(), reply: replyMsg, reaction: ""
                 });
                 input.value = ''; handleTyping(input); cancelReply();
+            } 
+            // Si no hay texto, manejamos grabación de audio
+            else {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                    btn.classList.remove('recording');
+                } else {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        audioChunks = [];
+                        
+                        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                        mediaRecorder.onstop = async () => {
+                            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const reader = new FileReader();
+                            reader.readAsDataURL(blob);
+                            reader.onloadend = () => {
+                                push(ref(db, 'mensajes'), { 
+                                    sender: userEmail, text: reader.result, type: 'audio', 
+                                    read: false, timestamp: serverTimestamp(), reaction: "" 
+                                });
+                            };
+                            stream.getTracks().forEach(track => track.stop());
+                        };
+                        
+                        mediaRecorder.start();
+                        btn.classList.add('recording');
+                    } catch (err) {
+                        alert("No se pudo acceder al micrófono.");
+                    }
+                }
             }
         };
 
@@ -262,6 +312,7 @@
             if (m.type === 'text') html += `<span>${m.text}</span>`;
             else if (m.type === 'photo') html += `<img src="${m.text}" onclick="openEph('${id}','${m.text}','photo', ${isMe})">`;
             else if (m.type === 'video') html += `<video src="${m.text}" onclick="openEph('${id}','${m.text}','video', ${isMe})"></video>`;
+            else if (m.type === 'audio') html += `<audio controls src="${m.text}"></audio>`;
             
             const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
             div.innerHTML = `${html}<div class="status-container">${time} ${isMe ? (m.read ? '<span class="check-read">✓✓</span>' : '✓') : ''}</div><div class="reaction-badge" style="display:${m.reaction?'block':'none'}">${m.reaction||''}</div>`;
